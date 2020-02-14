@@ -1,70 +1,90 @@
 package ga.tomj.osccontrol.gui;
 
-public class Button extends UIElement {
+import java.awt.*;
+
+public abstract class Button extends UIElement {
 
     int sizeX, sizeY;
     String label;
 
-    boolean pressActive;
     boolean pressed;
 
-    public Button(int x, int y, String label) {
+    private Color colour;
+
+    //Constructor, sets some default values including width and height.
+    public Button(int x, int y, String label, Color colour) {
         super(x, y);
-        sizeX = 50;
+        sizeX = 35;
         sizeY = 35;
         this.label = label;
-        this.pressActive = false;
         this.pressed = false;
+        this.colour = colour;
     }
 
-    private int port;
-
-    public Button(int x, int y, int sizeX, int sizeY, String label) {
+    //Constructor, allows for the height and width to be set when a new button is created.
+    public Button(int x, int y, int sizeX, int sizeY, String label, Color colour) {
         super(x, y);
         this.sizeX = sizeX;
         this.sizeY = sizeY;
         this.label = label;
-        this.pressActive = false;
         this.pressed = false;
+        this.colour = colour;
     }
 
     public void render() {
-
-        if (mouseInButton()) {
-            if (app.mousePressed) {
-                if (!pressActive) {
-                    pressed = !pressed;
-                    pressActive = true;
-                }
+        if (mouseInButton()) { //When the mouse is hovering over a button, a white stroke is drawn.
+            if (pressed) { //If the button is pressed, render the button with a fill and a white stroke.
+                app.fill(colour.getRed() / 2, colour.getGreen() / 2, colour.getBlue() / 2);
+                app.stroke(255);
+                app.strokeCap(app.ROUND);
+                app.strokeWeight(2);
+                app.rectMode(app.CENTER);
+                app.textAlign(app.CENTER, app.CENTER);
+                app.textSize(12);
+                app.rect(x, y, sizeX, sizeY, 3);
+                app.fill(255);
+                app.text(label, x, y - 2);
+            } else { //If the button is not pressed, render the button without a fill and a white stroke.
+                app.noFill();
+                app.stroke(255);
+                app.strokeCap(app.ROUND);
+                app.strokeWeight(2);
+                app.rectMode(app.CENTER);
+                app.textAlign(app.CENTER, app.CENTER);
+                app.textSize(12);
+                app.rect(x, y, sizeX, sizeY, 3);
+                app.fill(255);
+                app.text(label, x, y - 2);
             }
-            if (pressActive && !app.mousePressed) pressActive = false;
-            app.fill(64, 0, 0);
-            app.stroke(255, 0, 0);
+            return; //Exit - the button has been rendered!
+        } else if (pressed) { //If the button has been pressed, render the button with a fill.
+            app.fill(colour.getRed() / 2, colour.getGreen() / 2, colour.getBlue() / 2);
+            app.stroke(colour.getRed(), colour.getGreen(), colour.getBlue());
             app.strokeCap(app.ROUND);
             app.strokeWeight(2);
             app.rectMode(app.CENTER);
             app.textAlign(app.CENTER, app.CENTER);
             app.textSize(12);
             app.rect(x, y, sizeX, sizeY, 3);
-            app.fill(255, 255, 255);
+            app.fill(255);
             app.text(label, x, y - 2);
-            return;
-        } else {
-            pressActive = false;
+        } else { //If the button has not been pressed, render the button without a fill.
             app.noFill();
-            app.stroke(255, 0, 0);
+            app.stroke(colour.getRed(), colour.getGreen(), colour.getBlue());
             app.strokeCap(app.ROUND);
             app.strokeWeight(2);
             app.rectMode(app.CENTER);
             app.textAlign(app.CENTER, app.CENTER);
             app.textSize(12);
-            app.rect(x, y, sizeX, sizeY);
-            app.stroke(255, 255, 255);
+            app.rect(x, y, sizeX, sizeY, 3);
+            app.fill(255);
             app.text(label, x, y - 2);
         }
     }
 
-    private boolean mouseInButton() {
+    //This method checks the relative position of the mouse to the position of the center of the button. if the mouse position
+    //is insite the button, this returns true.
+    protected boolean mouseInButton() {
         return app.mouseX - x + sizeX / 2 >= 0 && app.mouseX - x + sizeX / 2 <= sizeX &&
                 app.mouseY - y + sizeY / 2 >= 0 && app.mouseY - y + sizeY / 2 <= sizeY;
     }
@@ -79,5 +99,11 @@ public class Button extends UIElement {
 
     public boolean isPressed() {
         return pressed;
+    }
+
+    public void setPressed(boolean pressed) {
+        if(pressed) System.out.println("pressed has been set to true");
+        else System.out.println("pressed has been set to false");
+        this.pressed = pressed;
     }
 }

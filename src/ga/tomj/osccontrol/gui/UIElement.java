@@ -1,13 +1,12 @@
 package ga.tomj.osccontrol.gui;
 
 import ga.tomj.osccontrol.OSCControl;
-import processing.core.PApplet;
 import processing.core.PConstants;
 
 public abstract class UIElement {
 
     protected int x, y;
-    protected PApplet app;
+    protected OSCControl app;
 
     protected UIElement(int x, int y) {
         this.x = x;
@@ -18,6 +17,8 @@ public abstract class UIElement {
 
     //This forces each type of UIElement object to have their own render method.
     public abstract void render();
+
+    public abstract void mousePressed();
 
     public void removeElement() {
         UIManager.getMgr().getElements().remove(this);
