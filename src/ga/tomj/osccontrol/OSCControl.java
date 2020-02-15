@@ -1,7 +1,8 @@
 package ga.tomj.osccontrol;
 
-import ga.tomj.osccontrol.gui.MuteButton;
-import ga.tomj.osccontrol.gui.SoloButton;
+import ga.tomj.osccontrol.gui.buttons.ModeButton;
+import ga.tomj.osccontrol.gui.buttons.MuteButton;
+import ga.tomj.osccontrol.gui.buttons.SoloButton;
 import ga.tomj.osccontrol.gui.UIElement;
 import ga.tomj.osccontrol.gui.UIManager;
 import netP5.NetAddress;
@@ -44,6 +45,7 @@ public class OSCControl extends PApplet {
             MuteButton m = new MuteButton(50 * (i + 1), 50, i + 1);
             SoloButton s = new SoloButton(50 * (i + 1), 100, i + 1);
         }
+        ModeButton mo = new ModeButton(100, 150);
     }
 
     //This method is repeatedly run throughout the programs life.
@@ -63,6 +65,16 @@ public class OSCControl extends PApplet {
         m.add(10);
         oscp5.send(m, reaperAddr);
 
+    }
+
+    public void mouseDragged() {
+        for(UIElement e : UIManager.getMgr().getElements()) {
+            e.mouseDragged();
+        }
+    }
+
+    public void mouseReleased() {
+        UIManager.getMgr().setElementDragged(null);
     }
 
     public void keyPressed() {
@@ -94,8 +106,8 @@ public class OSCControl extends PApplet {
     }
 
     public void oscEvent(OscMessage message) {
-        println("### Received an osc message.");
-        print(" addrpattern: " + message.addrPattern());
+        print("### Received an osc message.");
+        println(" addrpattern: " + message.addrPattern());
 
         String messageString = message.addrPattern();
         String[] splitMessage = split(messageString, "/"); //Split the message into its seperate parts.

@@ -1,23 +1,26 @@
-package ga.tomj.osccontrol.gui;
+package ga.tomj.osccontrol.gui.buttons;
 
 import ga.tomj.osccontrol.OSCControl;
+import ga.tomj.osccontrol.gui.UIManager;
 import oscP5.OscMessage;
 
 import java.awt.*;
 
 public class MuteButton extends Button {
 
-    int channelNumber;
+    private int channelNumber;
 
     public MuteButton(int x, int y, int channelNumber) {
         super(x, y, "M", new Color(255, 0, 0));
         this.channelNumber = channelNumber;
+        editable = true;
     }
 
     public void mousePressed() {
-        if(mouseInButton()) {
+        setOffsets();
+        if (mouseInElement() && !UIManager.getMgr().isEditMode()) {
             OscMessage myMessage = new OscMessage("/track/" + channelNumber + "/mute");
-            if (pressed)
+            if (isPressed())
                 myMessage.add(0.0F);
             else
                 myMessage.add(1.0F);

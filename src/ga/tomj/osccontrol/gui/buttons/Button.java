@@ -1,24 +1,28 @@
-package ga.tomj.osccontrol.gui;
+package ga.tomj.osccontrol.gui.buttons;
+
+import ga.tomj.osccontrol.gui.UIElement;
 
 import java.awt.*;
 
 public abstract class Button extends UIElement {
 
-    int sizeX, sizeY;
-    String label;
+    private int sizeX, sizeY;
+    private String label;
 
-    boolean pressed;
+    private boolean pressed;
+    protected boolean moving;
 
     private Color colour;
 
     //Constructor, sets some default values including width and height.
     public Button(int x, int y, String label, Color colour) {
         super(x, y);
-        sizeX = 35;
-        sizeY = 35;
+        this.sizeX = 35;
+        this.sizeY = 35;
         this.label = label;
         this.pressed = false;
         this.colour = colour;
+        this.moving = false;
     }
 
     //Constructor, allows for the height and width to be set when a new button is created.
@@ -32,7 +36,7 @@ public abstract class Button extends UIElement {
     }
 
     public void render() {
-        if (mouseInButton()) { //When the mouse is hovering over a button, a white stroke is drawn.
+        if (mouseInElement()) { //When the mouse is hovering over a button, a white stroke is drawn.
             if (pressed) { //If the button is pressed, render the button with a fill and a white stroke.
                 app.fill(colour.getRed() / 2, colour.getGreen() / 2, colour.getBlue() / 2);
                 app.stroke(255);
@@ -82,9 +86,7 @@ public abstract class Button extends UIElement {
         }
     }
 
-    //This method checks the relative position of the mouse to the position of the center of the button. if the mouse position
-    //is insite the button, this returns true.
-    protected boolean mouseInButton() {
+    public boolean mouseInElement() {
         return app.mouseX - x + sizeX / 2 >= 0 && app.mouseX - x + sizeX / 2 <= sizeX &&
                 app.mouseY - y + sizeY / 2 >= 0 && app.mouseY - y + sizeY / 2 <= sizeY;
     }
@@ -102,8 +104,24 @@ public abstract class Button extends UIElement {
     }
 
     public void setPressed(boolean pressed) {
-        if(pressed) System.out.println("pressed has been set to true");
+        if (pressed) System.out.println("pressed has been set to true");
         else System.out.println("pressed has been set to false");
         this.pressed = pressed;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
+    }
+
+    public Color getColour() {
+        return colour;
+    }
+
+    public void setColour(Color colour) {
+        this.colour = colour;
     }
 }
