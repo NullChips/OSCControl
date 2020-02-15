@@ -22,6 +22,8 @@ public class OSCControl extends PApplet {
     private String ip;
     private int receivePort, sendPort;
 
+    private int maxChannels;
+
 
     //This is the method which is ran by default within Java runtime when a program is started. In this case,
     //as this program was written within the full Java language, with Processing being used as a library, it is
@@ -41,11 +43,14 @@ public class OSCControl extends PApplet {
         connectOSC("127.0.0.1", 8000, 9000);
         app = this;
         //MuteButton master = new MuteButton(50, 100, 0);
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 16; i++) {
             MuteButton m = new MuteButton(50 * (i + 1), 50, i + 1);
             SoloButton s = new SoloButton(50 * (i + 1), 100, i + 1);
         }
         ModeButton mo = new ModeButton(100, 150);
+
+        maxChannels = 0;
+        reloadData();
     }
 
     //This method is repeatedly run throughout the programs life.
@@ -61,10 +66,6 @@ public class OSCControl extends PApplet {
         for (UIElement e : UIManager.getMgr().getElements()) {
             e.mousePressed();
         }
-        OscMessage m = new OscMessage("/device/track/count");
-        m.add(10);
-        oscp5.send(m, reaperAddr);
-
     }
 
     public void mouseDragged() {
@@ -93,6 +94,63 @@ public class OSCControl extends PApplet {
         oscp5 = new OscP5(this, sendPort);
     }
 
+    public void reloadData() {
+        for(UIElement e : UIManager.getMgr().getElements()) {
+            if (e instanceof MuteButton) {
+                MuteButton m = (MuteButton) e;
+                //This line uses an ? operator to check if the channel number of this element is greater than the current
+                //number of max channels. If it is, it sets the max channels to this elements channel number.
+                maxChannels = (m.getChannelNumber() > maxChannels) ? m.getChannelNumber() : maxChannels;
+            }
+
+            if (e instanceof SoloButton) {
+                SoloButton s = (SoloButton) e;
+                //This line uses an ? operator to check if the channel number of this element is greater than the current
+                //number of max channels. If it is, it sets the max channels to this elements channel number.
+                maxChannels = (s.getChannelNumber() > maxChannels) ? s.getChannelNumber() : maxChannels;
+            }
+        }
+
+        oscp5.send(new OscMessage("/device/track/count").add(maxChannels), reaperAddr);
+        oscp5.send(new OscMessage("/action/41743"), reaperAddr);
+
+    }
+
+    public void oscEvent(OscMessage message) {
+        String messageString = message.addrPattern();
+        String[] splitMessage = split(messageString, "/"); //Split the message into its seperate parts.
+
+        print("### Received an osc message.");
+        println(" addrpattern: " + messageString + "   Typetag: " + message.typetag() + "   Length: " + splitMessage.length);
+
+
+        for (UIElement e : UIManager.getMgr().getElements()) {
+            if (e instanceof MuteButton && splitMessage.length > 4 && splitMessage[1].equals("track") &&
+                    splitMessage[3].equals("mute")) { //Checks the message is of the right length and is a track mute message.
+
+                MuteButton m = (MuteButton) e; //Create a new MuteButton object from the UIElement object.
+                int channel = parseInt(splitMessage[2]);
+                if (m.getChannelNumber() == channel){
+                    float f = message.get(0).floatValue();
+                    boolean b = f == 1.0F;
+                    m.setPressed(b);
+                }
+        }
+
+            if (e instanceof SoloButton && splitMessage.length > 4 && splitMessage[1].equals("track") &&
+                    splitMessage[3].equals("solo")) { //Checks the message is of the right length and is a track solo message.
+
+                SoloButton s = (SoloButton) e; //Create a new SoloButton object from the UIElement object.
+                int channel = parseInt(splitMessage[2]);
+                if (s.getChannelNumber() == channel){
+                    float f = message.get(0).floatValue();
+                    boolean b = f == 1.0F;
+                    s.setPressed(b);
+                }
+            }
+        }
+    }
+
     public static OSCControl getApp() {
         return app;
     }
@@ -105,30 +163,5 @@ public class OSCControl extends PApplet {
         return reaperAddr;
     }
 
-    public void oscEvent(OscMessage message) {
-        print("### Received an osc message.");
-        println(" addrpattern: " + message.addrPattern());
-
-        String messageString = message.addrPattern();
-        String[] splitMessage = split(messageString, "/"); //Split the message into its seperate parts.
-
-        for (UIElement e : UIManager.getMgr().getElements()) {
-            if (e instanceof MuteButton && splitMessage.length > 4 && splitMessage[1].equals("track") &&
-                    splitMessage[3].equals("mute")) { //Checks the message is of the right length and is a track mute message.
-
-                MuteButton m = (MuteButton) e; //Create a new MuteButton object from the UIElement object.
-                int channel = parseInt(splitMessage[2]);
-                if (m.getChannelNumber() == channel) m.setPressed(!m.isPressed());
-            }
-
-            if (e instanceof SoloButton && splitMessage.length > 4 && splitMessage[1].equals("track") &&
-                    splitMessage[3].equals("solo")) { //Checks the message is of the right length and is a track solo message.
-
-                SoloButton s = (SoloButton) e; //Create a new SoloButton object from the UIElement object.
-                int channel = parseInt(splitMessage[2]);
-                if (s.getChannelNumber() == channel) s.setPressed(!s.isPressed());
-            }
-        }
-    }
 
 }

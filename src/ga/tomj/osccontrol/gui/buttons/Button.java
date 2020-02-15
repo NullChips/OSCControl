@@ -104,8 +104,6 @@ public abstract class Button extends UIElement {
     }
 
     public void setPressed(boolean pressed) {
-        if (pressed) System.out.println("pressed has been set to true");
-        else System.out.println("pressed has been set to false");
         this.pressed = pressed;
     }
 
