@@ -2,6 +2,8 @@ package ga.tomj.osccontrol.gui;
 
 import oscP5.OscMessage;
 
+import java.util.ArrayList;
+
 public class Fader extends UIElement {
 
     private int faderPercent;
@@ -10,6 +12,7 @@ public class Fader extends UIElement {
     private int rY;
     private int channelNumber;
     private int vuL, vuR;
+    private String trackName;
 
     public Fader(int x, int y, int channelNumber) {
         super(x, y);
@@ -22,11 +25,43 @@ public class Fader extends UIElement {
         this.vuR = 0;
         this.minY = y - (faderHeight / 2) + (rHeight / 2);
         this.maxY = y + (faderHeight / 2) - (rHeight / 2);
+        this.trackName = "Track " + channelNumber;
         this.editable = true;
     }
 
     public void render() {
         if(!UIManager.getMgr().isEditMode()) drawVU();
+        drawFader();
+        drawTrackName();
+    }
+
+    private void drawTrackName() {
+        String[] splitName = trackName.split(" ");
+        ArrayList<String> lines = new ArrayList<>();
+        String currentLine = null;
+        for(String s : splitName) {
+            if (currentLine != null && currentLine.length() > 3) {
+                lines.add(currentLine);
+                currentLine = null;
+            }
+            if(currentLine == null) currentLine = s;
+            else currentLine = currentLine + " " + s;
+        }
+        lines.add(currentLine);
+
+        app.fill(255);
+        app.textSize(10);
+        app.shapeMode(app.CENTER);
+
+        int lineNo = 1;
+        for(String s : lines) {
+            int lineY = (y + (faderHeight/2) + 10) + (lineNo * 10);
+            app.text(s, x, lineY);
+            lineNo++;
+        }
+    }
+
+    private void drawFader() {
         app.strokeWeight(6);
         app.stroke(64);
         app.line(x, y - faderHeight / 2, x, y + faderHeight / 2);
@@ -147,5 +182,9 @@ public class Fader extends UIElement {
 
     public void setVuR(int vuR) {
         this.vuR = vuR;
+    }
+
+    public void setTrackName(String trackName) {
+        this.trackName = trackName;
     }
 }

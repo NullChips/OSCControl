@@ -180,6 +180,12 @@ public class OSCControl extends PApplet {
                 }
             }
 
+            if (e instanceof Fader && splitMessage.length == 4 && splitMessage[1].equals("track") &&
+                    splitMessage[3].equals("name")) {
+                Fader f = (Fader) e;
+                int channel = parseInt(splitMessage[2]);
+                if (f.getChannelNumber() == channel) f.setTrackName(message.get(0).stringValue());
+            }
         }
     }
 
