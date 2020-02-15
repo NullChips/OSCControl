@@ -1,10 +1,11 @@
 package ga.tomj.osccontrol;
 
+import ga.tomj.osccontrol.gui.Fader;
+import ga.tomj.osccontrol.gui.UIElement;
+import ga.tomj.osccontrol.gui.UIManager;
 import ga.tomj.osccontrol.gui.buttons.ModeButton;
 import ga.tomj.osccontrol.gui.buttons.MuteButton;
 import ga.tomj.osccontrol.gui.buttons.SoloButton;
-import ga.tomj.osccontrol.gui.UIElement;
-import ga.tomj.osccontrol.gui.UIManager;
 import netP5.NetAddress;
 import oscP5.OscMessage;
 import oscP5.OscP5;
@@ -35,19 +36,21 @@ public class OSCControl extends PApplet {
     //This method defines the settings for the window.
     public void settings() {
         size(1050, 650);
+        smooth(2);
     }
 
     //This method is called when the program is first run and sets the default values for the IP and ports.
     public void setup() {
-        background(38, 50, 56); //The background is drawn in the setup method as well to avoid the visible lag that occurs when OSC is connecting.
+        background(32); //The background is drawn in the setup method as well to avoid the visible lag that occurs when OSC is connecting.
         connectOSC("127.0.0.1", 8000, 9000);
         app = this;
         //MuteButton master = new MuteButton(50, 100, 0);
         for (int i = 0; i < 16; i++) {
-            MuteButton m = new MuteButton(50 * (i + 1), 50, i + 1);
-            SoloButton s = new SoloButton(50 * (i + 1), 100, i + 1);
+            MuteButton m = new MuteButton(70 * (i + 1), 50, i + 1);
+            SoloButton s = new SoloButton(70 * (i + 1), 100, i + 1);
+            Fader f = new Fader(70 * (i + 1), 285, i + 1);
         }
-        ModeButton mo = new ModeButton(100, 150);
+        ModeButton mo = new ModeButton(100, 475);
 
         maxChannels = 0;
         reloadData();
@@ -55,7 +58,7 @@ public class OSCControl extends PApplet {
 
     //This method is repeatedly run throughout the programs life.
     public void draw() {
-        background(19, 25, 28);
+        background(32);
         //Render all the UI elements.
         for (UIElement e : UIManager.getMgr().getElements()) {
             e.render();
@@ -69,12 +72,13 @@ public class OSCControl extends PApplet {
     }
 
     public void mouseDragged() {
-        for(UIElement e : UIManager.getMgr().getElements()) {
+        for (UIElement e : UIManager.getMgr().getElements()) {
             e.mouseDragged();
         }
     }
 
     public void mouseReleased() {
+        cursor();
         UIManager.getMgr().setElementDragged(null);
     }
 
@@ -95,7 +99,7 @@ public class OSCControl extends PApplet {
     }
 
     public void reloadData() {
-        for(UIElement e : UIManager.getMgr().getElements()) {
+        for (UIElement e : UIManager.getMgr().getElements()) {
             if (e instanceof MuteButton) {
                 MuteButton m = (MuteButton) e;
                 //This line uses an ? operator to check if the channel number of this element is greater than the current
@@ -130,24 +134,36 @@ public class OSCControl extends PApplet {
 
                 MuteButton m = (MuteButton) e; //Create a new MuteButton object from the UIElement object.
                 int channel = parseInt(splitMessage[2]);
-                if (m.getChannelNumber() == channel){
+                if (m.getChannelNumber() == channel) {
                     float f = message.get(0).floatValue();
                     boolean b = f == 1.0F;
                     m.setPressed(b);
                 }
-        }
+            }
 
             if (e instanceof SoloButton && splitMessage.length > 4 && splitMessage[1].equals("track") &&
                     splitMessage[3].equals("solo")) { //Checks the message is of the right length and is a track solo message.
 
                 SoloButton s = (SoloButton) e; //Create a new SoloButton object from the UIElement object.
                 int channel = parseInt(splitMessage[2]);
-                if (s.getChannelNumber() == channel){
+                if (s.getChannelNumber() == channel) {
                     float f = message.get(0).floatValue();
                     boolean b = f == 1.0F;
                     s.setPressed(b);
                 }
             }
+
+            if (e instanceof Fader && splitMessage.length == 4 && splitMessage[1].equals("track") &&
+                    splitMessage[3].equals("volume")) {
+                Fader f = (Fader) e;
+                int channel = parseInt(splitMessage[2]);
+                if (f.getChannelNumber() == channel) {
+                    float fl = message.get(0).floatValue();
+                    fl = fl * 100;
+                    f.setFaderPercent((int) fl);
+                }
+            }
+
         }
     }
 

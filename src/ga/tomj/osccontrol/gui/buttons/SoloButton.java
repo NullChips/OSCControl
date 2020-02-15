@@ -1,6 +1,5 @@
 package ga.tomj.osccontrol.gui.buttons;
 
-import ga.tomj.osccontrol.OSCControl;
 import ga.tomj.osccontrol.gui.UIManager;
 import oscP5.OscMessage;
 
@@ -19,12 +18,12 @@ public class SoloButton extends Button {
     public void mousePressed() {
         setOffsets();
         if(mouseInElement() && !UIManager.getMgr().isEditMode()) {
-            OscMessage myMessage = new OscMessage("/track/" + channelNumber + "/solo");
+            OscMessage message = new OscMessage("/track/" + channelNumber + "/solo");
             if (isPressed())
-                myMessage.add(0.0F);
+                message.add(0.0F);
             else
-                myMessage.add(1.0F);
-            OSCControl.getApp().getOscp5().send(myMessage, OSCControl.getApp().getReaperAddr());
+                message.add(1.0F);
+            app.getOscp5().send(message, app.getReaperAddr());
         }
     }
 

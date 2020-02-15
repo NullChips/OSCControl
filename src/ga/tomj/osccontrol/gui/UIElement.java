@@ -41,9 +41,10 @@ public abstract class UIElement {
     }
 
     public void mouseDragged() {
-        if (UIManager.getMgr().getElementDragged() == this) {
+        if (UIManager.getMgr().getElementDragged() == this && UIManager.getMgr().isEditMode()) {
             x = app.mouseX - xOffset;
             y = app.mouseY - yOffset;
+            return;
         } else if (UIManager.getMgr().isEditMode() && editable && mouseInElement() &&
                 UIManager.getMgr().getElementDragged() == null) {
             UIManager.getMgr().setElementDragged(this);

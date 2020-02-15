@@ -13,7 +13,7 @@ public class UIManager {
 
     private UIManager() {
         if (elements == null) elements = new ArrayList<>();
-        editMode = true;
+        editMode = false;
         elementDragged = null;
     }
 
