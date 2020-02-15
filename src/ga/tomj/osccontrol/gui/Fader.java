@@ -6,25 +6,27 @@ public class Fader extends UIElement {
 
     private int faderPercent;
     private int minY, maxY;
-    private int rHeight, faderHeight;
+    private int rHeight, faderHeight, faderWidth;
     private int rY;
     private int channelNumber;
+    private int vuL, vuR;
 
     public Fader(int x, int y, int channelNumber) {
         super(x, y);
         this.faderPercent = 0;
-        this.faderHeight = 300;
         this.rHeight = 20;
+        this.faderHeight = 225;
+        this.faderWidth = 35;
         this.channelNumber = channelNumber;
+        this.vuL = 0;
+        this.vuR = 0;
         this.minY = y - (faderHeight / 2) + (rHeight / 2);
         this.maxY = y + (faderHeight / 2) - (rHeight / 2);
         this.editable = true;
     }
 
     public void render() {
-        app.smooth();
-        app.textSize(14);
-        faderHeight = 300;
+        if(!UIManager.getMgr().isEditMode()) drawVU();
         app.strokeWeight(6);
         app.stroke(64);
         app.line(x, y - faderHeight / 2, x, y + faderHeight / 2);
@@ -36,9 +38,18 @@ public class Fader extends UIElement {
         maxY = y + (faderHeight / 2) - (rHeight / 2);
         calcRectY();
         app.fill(192, 192, 192, 127);
-        app.rect(x, calcRectY(), 50, rHeight);
+        app.rect(x, calcRectY(), faderWidth, rHeight, 5);
     }
 
+    private void drawVU() {
+        int heightL = (faderHeight / 100) * vuL;
+        int heightR = (faderHeight / 100) * vuR;
+
+        app.strokeWeight(2);
+        app.stroke(0, 255, 0);
+        if (heightL > 0) app.line(x - 10, y + (faderHeight / 2), x - 10, (y + (faderHeight / 2)) - heightL);
+        if (heightR > 0) app.line(x + 10, y + (faderHeight / 2), x + 10, (y + (faderHeight / 2)) - heightR);
+    }
 
     private int calcRectY() {
         float minYF = (float) minY;
@@ -106,7 +117,7 @@ public class Fader extends UIElement {
     }
 
     public boolean mouseInElement() {
-        return app.mouseX - x + 50 / 2 >= 0 && app.mouseX - x + 50 / 2 <= 50 &&
+        return app.mouseX - x + faderWidth / 2 >= 0 && app.mouseX - x + faderWidth / 2 <= faderWidth &&
                 app.mouseY - y + faderHeight / 2 >= 0 && app.mouseY - y + faderHeight / 2 <= faderHeight;
     }
 
@@ -122,4 +133,19 @@ public class Fader extends UIElement {
         this.faderPercent = faderPercent;
     }
 
+    public int getVuL() {
+        return vuL;
+    }
+
+    public void setVuL(int vuL) {
+        this.vuL = vuL;
+    }
+
+    public int getVuR() {
+        return vuR;
+    }
+
+    public void setVuR(int vuR) {
+        this.vuR = vuR;
+    }
 }

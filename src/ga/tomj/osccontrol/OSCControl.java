@@ -46,11 +46,12 @@ public class OSCControl extends PApplet {
         app = this;
         //MuteButton master = new MuteButton(50, 100, 0);
         for (int i = 0; i < 16; i++) {
-            MuteButton m = new MuteButton(70 * (i + 1), 50, i + 1);
-            SoloButton s = new SoloButton(70 * (i + 1), 100, i + 1);
-            Fader f = new Fader(70 * (i + 1), 285, i + 1);
+            int x = (50 * (i + 1)) - 15;
+            MuteButton m = new MuteButton(x, 125, i + 1);
+            SoloButton s = new SoloButton(x, 75, i + 1);
+            Fader f = new Fader(x, 275, i + 1);
         }
-        ModeButton mo = new ModeButton(100, 475);
+        ModeButton mo = new ModeButton(85, 25);
 
         maxChannels = 0;
         reloadData();
@@ -161,6 +162,21 @@ public class OSCControl extends PApplet {
                     float fl = message.get(0).floatValue();
                     fl = fl * 100;
                     f.setFaderPercent((int) fl);
+                }
+            }
+
+            if (e instanceof Fader && splitMessage.length == 5 && splitMessage[1].equals("track") &&
+                    splitMessage[3].equals("vu")) {
+                Fader f = (Fader) e;
+                int channel = parseInt(splitMessage[2]);
+                if (f.getChannelNumber() == channel && splitMessage[4].equals("L")) {
+                    float fl = message.get(0).floatValue();
+                    fl = fl * 100;
+                    f.setVuL((int) fl);
+                } else if (f.getChannelNumber() == channel && splitMessage[4].equals("R")) {
+                    float fl = message.get(0).floatValue();
+                    fl = fl * 100;
+                    f.setVuR((int) fl);
                 }
             }
 
