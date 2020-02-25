@@ -35,6 +35,7 @@ public class Fader extends UIElement {
         drawTrackName();
     }
 
+
     private void drawTrackName() {
         String[] splitName = trackName.split(" ");
         ArrayList<String> lines = new ArrayList<>();
@@ -120,7 +121,6 @@ public class Fader extends UIElement {
         }
     }
 
-    @Override
     public void mouseDragged() {
         super.mouseDragged();
         if (!UIManager.getMgr().isEditMode() && UIManager.getMgr().getElementDragged() == this) {
@@ -130,7 +130,6 @@ public class Fader extends UIElement {
             } else if (app.mouseY < minY) {
                 faderPercent = 100;
                 sendOscMessage();
-
             } else {
                 faderPercent = 0;
                 sendOscMessage();

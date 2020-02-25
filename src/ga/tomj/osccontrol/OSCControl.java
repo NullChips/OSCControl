@@ -3,9 +3,7 @@ package ga.tomj.osccontrol;
 import ga.tomj.osccontrol.gui.Fader;
 import ga.tomj.osccontrol.gui.UIElement;
 import ga.tomj.osccontrol.gui.UIManager;
-import ga.tomj.osccontrol.gui.buttons.ModeButton;
-import ga.tomj.osccontrol.gui.buttons.MuteButton;
-import ga.tomj.osccontrol.gui.buttons.SoloButton;
+import ga.tomj.osccontrol.gui.buttons.*;
 import netP5.NetAddress;
 import oscP5.OscMessage;
 import oscP5.OscP5;
@@ -25,10 +23,9 @@ public class OSCControl extends PApplet {
 
     private int maxChannels;
 
-
     //This is the method which is ran by default within Java runtime when a program is started. In this case,
     //as this program was written within the full Java language, with Processing being used as a library, it is
-    //necessary to point Processing to the main class of the project.
+    //necessary to point the Processing library to the main class of the project.
     public static void main(String[] args) {
         PApplet.main("ga.tomj.osccontrol.OSCControl");
     }
@@ -52,6 +49,9 @@ public class OSCControl extends PApplet {
             Fader f = new Fader(x, 275, i + 1);
         }
         ModeButton mo = new ModeButton(85, 25);
+        TransportButton t1 = new TransportButton(195, 25, TransportType.PLAY);
+        TransportButton t2 = new TransportButton(260, 25, TransportType.CLICK);
+        TransportButton t3 = new TransportButton(325, 25, TransportType.LOOP);
 
         maxChannels = 0;
         reloadData();
@@ -136,9 +136,7 @@ public class OSCControl extends PApplet {
                 MuteButton m = (MuteButton) e; //Create a new MuteButton object from the UIElement object.
                 int channel = parseInt(splitMessage[2]);
                 if (m.getChannelNumber() == channel) {
-                    float f = message.get(0).floatValue();
-                    boolean b = f == 1.0F;
-                    m.setPressed(b);
+                    m.setPressed(message.get(0).floatValue() == 1.0F);
                 }
             }
 
@@ -148,9 +146,7 @@ public class OSCControl extends PApplet {
                 SoloButton s = (SoloButton) e; //Create a new SoloButton object from the UIElement object.
                 int channel = parseInt(splitMessage[2]);
                 if (s.getChannelNumber() == channel) {
-                    float f = message.get(0).floatValue();
-                    boolean b = f == 1.0F;
-                    s.setPressed(b);
+                    s.setPressed(message.get(0).floatValue() == 1.0F);
                 }
             }
 
@@ -159,9 +155,7 @@ public class OSCControl extends PApplet {
                 Fader f = (Fader) e;
                 int channel = parseInt(splitMessage[2]);
                 if (f.getChannelNumber() == channel) {
-                    float fl = message.get(0).floatValue();
-                    fl = fl * 100;
-                    f.setFaderPercent((int) fl);
+                    f.setFaderPercent((int) (message.get(0).floatValue() * 100));
                 }
             }
 
@@ -170,13 +164,9 @@ public class OSCControl extends PApplet {
                 Fader f = (Fader) e;
                 int channel = parseInt(splitMessage[2]);
                 if (f.getChannelNumber() == channel && splitMessage[4].equals("L")) {
-                    float fl = message.get(0).floatValue();
-                    fl = fl * 100;
-                    f.setVuL((int) fl);
+                    f.setVuL((int) (message.get(0).floatValue() * 100));
                 } else if (f.getChannelNumber() == channel && splitMessage[4].equals("R")) {
-                    float fl = message.get(0).floatValue();
-                    fl = fl * 100;
-                    f.setVuR((int) fl);
+                    f.setVuR((int) (message.get(0).floatValue() * 100));
                 }
             }
 
@@ -185,6 +175,18 @@ public class OSCControl extends PApplet {
                 Fader f = (Fader) e;
                 int channel = parseInt(splitMessage[2]);
                 if (f.getChannelNumber() == channel) f.setTrackName(message.get(0).stringValue());
+            }
+
+            if (e instanceof TransportButton) {
+                TransportButton tb = (TransportButton) e;
+                if (tb.getTransportType() == TransportType.CLICK && splitMessage.length == 2 && splitMessage[1].equals("click"))
+                    tb.setPressed(message.get(0).floatValue() == 1.0F);
+
+                if (tb.getTransportType() == TransportType.PLAY && splitMessage.length == 2 && splitMessage[1].equals("play"))
+                    tb.setPressed(message.get(0).floatValue() == 1.0F);
+
+                if (tb.getTransportType() == TransportType.LOOP && splitMessage.length == 2 && splitMessage[1].equals("repeat"))
+                    tb.setPressed(message.get(0).floatValue() == 1.0F);
             }
         }
     }
@@ -200,6 +202,4 @@ public class OSCControl extends PApplet {
     public NetAddress getReaperAddr() {
         return reaperAddr;
     }
-
-
 }
