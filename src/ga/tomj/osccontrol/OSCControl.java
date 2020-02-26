@@ -1,6 +1,7 @@
 package ga.tomj.osccontrol;
 
 import ga.tomj.osccontrol.gui.Fader;
+import ga.tomj.osccontrol.gui.Pan;
 import ga.tomj.osccontrol.gui.UIElement;
 import ga.tomj.osccontrol.gui.UIManager;
 import ga.tomj.osccontrol.gui.buttons.*;
@@ -44,9 +45,10 @@ public class OSCControl extends PApplet {
         //MuteButton master = new MuteButton(50, 100, 0);
         for (int i = 0; i < 16; i++) {
             int x = (50 * (i + 1)) - 15;
-            MuteButton m = new MuteButton(x, 125, i + 1);
             SoloButton s = new SoloButton(x, 75, i + 1);
-            Fader f = new Fader(x, 275, i + 1);
+            MuteButton m = new MuteButton(x, 125, i + 1);
+            Pan p = new Pan(x, 175, i + 1);
+            Fader f = new Fader(x, 325, i + 1);
         }
         ModeButton mo = new ModeButton(85, 25);
         TransportButton t1 = new TransportButton(195, 25, TransportType.PLAY);
@@ -175,6 +177,16 @@ public class OSCControl extends PApplet {
                 Fader f = (Fader) e;
                 int channel = parseInt(splitMessage[2]);
                 if (f.getChannelNumber() == channel) f.setTrackName(message.get(0).stringValue());
+            }
+
+            if (e instanceof Pan && splitMessage.length == 4 && splitMessage[1].equals("track") &&
+                    splitMessage[3].equals("pan")) {
+                Pan p = (Pan) e;
+                int channel = parseInt(splitMessage[2]);
+                if (p.getChannelNumber() == channel) {
+                    float f = message.get(0).floatValue() * 100;
+                    p.setPercent((int) f);
+                }
             }
 
             if (e instanceof TransportButton) {

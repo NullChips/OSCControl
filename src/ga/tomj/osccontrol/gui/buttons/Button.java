@@ -1,6 +1,7 @@
 package ga.tomj.osccontrol.gui.buttons;
 
 import ga.tomj.osccontrol.gui.UIElement;
+import ga.tomj.osccontrol.gui.UIManager;
 
 import java.awt.*;
 
@@ -36,7 +37,7 @@ public abstract class Button extends UIElement {
     }
 
     public void render() {
-        if (mouseInElement()) { //When the mouse is hovering over a button, a white stroke is drawn.
+        if (mouseInElement() && UIManager.getMgr().getElementDragged() == null) { //When the mouse is hovering over a button, a white stroke is drawn.
             if (pressed) { //If the button is pressed, render the button with a fill and a white stroke.
                 app.fill(colour.getRed() / 2, colour.getGreen() / 2, colour.getBlue() / 2);
                 app.stroke(255);
