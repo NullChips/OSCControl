@@ -51,6 +51,10 @@ public abstract class UIElement {
         }
     }
 
+    public void doubleClick() {
+        mousePressed();
+    }
+
     public int getX() {
         return x;
     }
@@ -58,4 +62,5 @@ public abstract class UIElement {
     public int getY() {
         return y;
     }
+
 }

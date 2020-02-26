@@ -24,6 +24,9 @@ public class OSCControl extends PApplet {
 
     private int maxChannels;
 
+    private boolean isDoubleClick;
+    private int doubleClickCounter;
+
     //This is the method which is ran by default within Java runtime when a program is started. In this case,
     //as this program was written within the full Java language, with Processing being used as a library, it is
     //necessary to point the Processing library to the main class of the project.
@@ -55,7 +58,7 @@ public class OSCControl extends PApplet {
         TransportButton t2 = new TransportButton(260, 25, TransportType.CLICK);
         TransportButton t3 = new TransportButton(325, 25, TransportType.LOOP);
 
-        maxChannels = 0;
+        doubleClickCounter = 0;
         reloadData();
     }
 
@@ -66,12 +69,32 @@ public class OSCControl extends PApplet {
         for (UIElement e : UIManager.getMgr().getElements()) {
             e.render();
         }
+
+        if (isDoubleClick) {
+            if (doubleClickCounter < 30) {
+                doubleClickCounter++;
+            } else {
+                isDoubleClick = false;
+            }
+        }
     }
 
     public void mousePressed() {
         for (UIElement e : UIManager.getMgr().getElements()) {
             e.mousePressed();
         }
+
+        if(isDoubleClick) {
+            for(UIElement e : UIManager.getMgr().getElements()) {
+                e.doubleClick();
+            }
+        } else {
+            for (UIElement e : UIManager.getMgr().getElements()) {
+                e.mousePressed();
+            }
+            isDoubleClick = true;
+        }
+        doubleClickCounter = 0;
     }
 
     public void mouseDragged() {
@@ -213,5 +236,9 @@ public class OSCControl extends PApplet {
 
     public NetAddress getReaperAddr() {
         return reaperAddr;
+    }
+
+    public void setDoubleClick(boolean doubleClick) {
+        isDoubleClick = doubleClick;
     }
 }

@@ -20,8 +20,12 @@ public class Pan extends UIElement {
     }
 
     public void render() {
-        app.stroke(128);
-        app.fill(200);
+        app.stroke(80);
+        if (UIManager.getMgr().getElementDragged() == this) {
+            app.fill(128);
+        } else {
+            app.fill(200);
+        }
         app.shapeMode(app.CENTER);
         app.strokeWeight(2);
         app.circle(x, y, diameter);
@@ -66,7 +70,7 @@ public class Pan extends UIElement {
 
             OscMessage message = new OscMessage("/track/" + channelNumber + "/pan");
             float f = percent;
-            f = f/100;
+            f = f / 100;
             System.out.println(f);
             message.add(f);
             app.getOscp5().send(message, app.getReaperAddr());
@@ -74,6 +78,13 @@ public class Pan extends UIElement {
 
         if (mouseInElement() && !UIManager.getMgr().isEditMode() && UIManager.getMgr().getElementDragged() == null) {
             UIManager.getMgr().setElementDragged(this);
+        }
+    }
+
+    public void doubleClick() {
+        if (mouseInElement() && !UIManager.getMgr().isEditMode()) {
+            percent = 50;
+            app.setDoubleClick(false);
         }
     }
 

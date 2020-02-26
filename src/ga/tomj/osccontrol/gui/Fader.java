@@ -73,7 +73,11 @@ public class Fader extends UIElement {
         minY = y - (faderHeight / 2) + (rHeight / 2);
         maxY = y + (faderHeight / 2) - (rHeight / 2);
         calcRectY();
-        app.fill(192, 192, 192, 127);
+        if(UIManager.getMgr().getElementDragged() == this) {
+            app.fill(100, 100, 100, 127);
+        } else {
+            app.fill(192, 192, 192, 127);
+        }
         app.rect(x, calcRectY(), faderWidth, rHeight, 5);
     }
 
@@ -139,6 +143,14 @@ public class Fader extends UIElement {
         if (mouseInElement() && !UIManager.getMgr().isEditMode() && UIManager.getMgr().getElementDragged() == null) {
             UIManager.getMgr().setElementDragged(this);
             calcFaderPercentage(app.mouseY);
+        }
+    }
+
+    public void doubleClick() {
+        if(mouseInElement() && !UIManager.getMgr().isEditMode()) {
+            faderPercent = 71; //This is the value which gives a level of 0 in Reaper.
+            sendOscMessage();
+            app.setDoubleClick(false);
         }
     }
 
