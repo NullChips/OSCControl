@@ -2,7 +2,7 @@ package ga.tomj.osccontrol.gui.buttons;
 
 import java.awt.*;
 
-public enum TransportType {
+public enum TransportButtonType {
     PLAY("Play", "/play", new Color(54, 218, 255)),
     LOOP("Loop", "/repeat", new Color(120, 255, 76)),
     CLICK("Click", "/click", new Color(78, 102, 255));
@@ -11,7 +11,7 @@ public enum TransportType {
     private String oscMessage;
     private Color colour;
 
-    TransportType(String buttonName, String oscMessage, Color colour) {
+    TransportButtonType(String buttonName, String oscMessage, Color colour) {
         this.buttonName = buttonName;
         this.oscMessage = oscMessage;
         this.colour = colour;

@@ -5,23 +5,23 @@ import oscP5.OscMessage;
 
 public class TransportButton extends Button {
 
-    private TransportType transportType;
+    private TransportButtonType transportButtonType;
 
-    public TransportButton(int x, int y, TransportType transportType) {
-        super(x, y, 50, 35, transportType.getButtonName(), transportType.getColour());
-        this.transportType = transportType;
+    public TransportButton(int x, int y, TransportButtonType transportButtonType) {
+        super(x, y, 50, 35, transportButtonType.getButtonName(), transportButtonType.getColour());
+        this.transportButtonType = transportButtonType;
         this.editable = true;
     }
 
     public void mousePressed() {
         setOffsets();
         if(!UIManager.getMgr().isEditMode() && mouseInElement()) {
-            OscMessage message = new OscMessage(transportType.getOscMessage());
+            OscMessage message = new OscMessage(transportButtonType.getOscMessage());
             app.getOscp5().send(message, app.getReaperAddr());
         }
     }
 
-    public TransportType getTransportType() {
-        return transportType;
+    public TransportButtonType getTransportButtonType() {
+        return transportButtonType;
     }
 }

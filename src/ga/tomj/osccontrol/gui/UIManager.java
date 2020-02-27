@@ -1,18 +1,21 @@
 package ga.tomj.osccontrol.gui;
 
-import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class UIManager {
-    //This ArrayList will contain all me.nch.osccontrol.gui.UIElement objects created. An ArrayList has been chosen as this allows for
-    //a flexible and dynamic array which can be changed as the user adds or removes objects.
-    private ArrayList<UIElement> elements;
+    /*This ArrayList will contain all UIElement objects created. An ArrayList has been chosen as this allows for
+    a flexible and dynamic array which can be changed as the user adds or removes objects. */
+    private CopyOnWriteArrayList<UIElement> elements;
     private boolean editMode;
     private UIElement elementDragged;
 
     private static UIManager mgr;
 
     private UIManager() {
-        if (elements == null) elements = new ArrayList<>();
+        /* Because the elements ArrayList is accessed from different threads (draw(), mouseClick(), etc) a
+        a CopyOnWriteArrayList is used. This allows for the arraylist to be accessed and modified from different threads
+        easily. */
+        if (elements == null) elements = new CopyOnWriteArrayList<>();
         editMode = false;
         elementDragged = null;
     }
@@ -22,11 +25,11 @@ public class UIManager {
         return mgr;
     }
 
-    public ArrayList<UIElement> getElements() {
+    public CopyOnWriteArrayList<UIElement> getElements() {
         return elements;
     }
 
-    public void setElements(ArrayList<UIElement> e) {
+    public void setElements(CopyOnWriteArrayList<UIElement> e) {
         elements = e;
     }
 

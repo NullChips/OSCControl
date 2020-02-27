@@ -10,6 +10,9 @@ import oscP5.OscMessage;
 import oscP5.OscP5;
 import processing.core.PApplet;
 
+import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 //This class extends PApplet, as this program was written in fully fledged Java, using the Processing libraries.
 //Processing would normally do this behind the scenes by default.
 public class OSCControl extends PApplet {
@@ -27,6 +30,8 @@ public class OSCControl extends PApplet {
     private boolean isDoubleClick;
     private int doubleClickCounter;
 
+    private AppMode mode;
+
     //This is the method which is ran by default within Java runtime when a program is started. In this case,
     //as this program was written within the full Java language, with Processing being used as a library, it is
     //necessary to point the Processing library to the main class of the project.
@@ -36,27 +41,24 @@ public class OSCControl extends PApplet {
 
     //This method defines the settings for the window.
     public void settings() {
-        size(1050, 650);
-        smooth(2);
+        size(1050, 650); //Set window size.
+        smooth(2); //Enable anti-aliasing.
     }
 
     //This method is called when the program is first run and sets the default values for the IP and ports.
     public void setup() {
+        UIManager.getMgr().setElements(new CopyOnWriteArrayList<>());
         background(32); //The background is drawn in the setup method as well to avoid the visible lag that occurs when OSC is connecting.
         connectOSC("127.0.0.1", 8000, 9000);
+
+        surface.setResizable(false);
+        frameRate(30); //Decrease framerate to decrease processing load.
+
         app = this;
-        //MuteButton master = new MuteButton(50, 100, 0);
-        for (int i = 0; i < 16; i++) {
-            int x = (50 * (i + 1)) - 15;
-            SoloButton s = new SoloButton(x, 75, i + 1);
-            MuteButton m = new MuteButton(x, 125, i + 1);
-            Pan p = new Pan(x, 175, i + 1);
-            Fader f = new Fader(x, 325, i + 1);
-        }
-        ModeButton mo = new ModeButton(85, 25);
-        TransportButton t1 = new TransportButton(195, 25, TransportType.PLAY);
-        TransportButton t2 = new TransportButton(260, 25, TransportType.CLICK);
-        TransportButton t3 = new TransportButton(325, 25, TransportType.LOOP);
+        mode = AppMode.STARTUP;
+
+        drawStartupScreen();
+//        drawTestLayout();
 
         doubleClickCounter = 0;
         reloadData();
@@ -64,10 +66,21 @@ public class OSCControl extends PApplet {
 
     //This method is repeatedly run throughout the programs life.
     public void draw() {
+        ArrayList<UIElement> removed = new ArrayList<>();
+        System.out.println(UIManager.getMgr().getElements().size());
         background(32);
         //Render all the UI elements.
         for (UIElement e : UIManager.getMgr().getElements()) {
-            e.render();
+            if (e.getMode() == mode) {
+                e.render();
+            } else {
+                removed.add(e);
+                //If the element is not from the current mode, remove it (saves on CPU power).
+            }
+        }
+
+        for (UIElement e : removed) {
+            UIManager.getMgr().getElements().remove(e);
         }
 
         if (isDoubleClick) {
@@ -80,17 +93,17 @@ public class OSCControl extends PApplet {
     }
 
     public void mousePressed() {
-        for (UIElement e : UIManager.getMgr().getElements()) {
-            e.mousePressed();
-        }
-
-        if(isDoubleClick) {
-            for(UIElement e : UIManager.getMgr().getElements()) {
-                e.doubleClick();
+        if (isDoubleClick) {
+            for (UIElement e : UIManager.getMgr().getElements()) {
+                if (mode == e.getMode()) {
+                    e.doubleClick();
+                }
             }
         } else {
             for (UIElement e : UIManager.getMgr().getElements()) {
-                e.mousePressed();
+                if (mode == e.getMode()) {
+                    e.mousePressed();
+                }
             }
             isDoubleClick = true;
         }
@@ -99,7 +112,9 @@ public class OSCControl extends PApplet {
 
     public void mouseDragged() {
         for (UIElement e : UIManager.getMgr().getElements()) {
-            e.mouseDragged();
+            if (mode == e.getMode()) {
+                e.mouseDragged();
+            }
         }
     }
 
@@ -147,83 +162,107 @@ public class OSCControl extends PApplet {
     }
 
     public void oscEvent(OscMessage message) {
-        String messageString = message.addrPattern();
-        String[] splitMessage = split(messageString, "/"); //Split the message into its seperate parts.
+        if (mode == AppMode.RUN) {
+            String messageString = message.addrPattern();
+            String[] splitMessage = split(messageString, "/"); //Split the message into its seperate parts.
 
-        print("### Received an osc message.");
-        println(" addrpattern: " + messageString + "   Typetag: " + message.typetag() + "   Length: " + splitMessage.length);
+            print("### Received an osc message.");
+            println(" addrpattern: " + messageString + "   Typetag: " + message.typetag() + "   Length: " + splitMessage.length);
 
 
-        for (UIElement e : UIManager.getMgr().getElements()) {
-            if (e instanceof MuteButton && splitMessage.length > 4 && splitMessage[1].equals("track") &&
-                    splitMessage[3].equals("mute")) { //Checks the message is of the right length and is a track mute message.
+            for (UIElement e : UIManager.getMgr().getElements()) {
+                if (e instanceof MuteButton && splitMessage.length > 4 && splitMessage[1].equals("track") &&
+                        splitMessage[3].equals("mute")) { //Checks the message is of the right length and is a track mute message.
 
-                MuteButton m = (MuteButton) e; //Create a new MuteButton object from the UIElement object.
-                int channel = parseInt(splitMessage[2]);
-                if (m.getChannelNumber() == channel) {
-                    m.setPressed(message.get(0).floatValue() == 1.0F);
+                    MuteButton m = (MuteButton) e; //Create a new MuteButton object from the UIElement object.
+                    int channel = parseInt(splitMessage[2]);
+                    if (m.getChannelNumber() == channel) {
+                        m.setPressed(message.get(0).floatValue() == 1.0F);
+                    }
                 }
-            }
 
-            if (e instanceof SoloButton && splitMessage.length > 4 && splitMessage[1].equals("track") &&
-                    splitMessage[3].equals("solo")) { //Checks the message is of the right length and is a track solo message.
+                if (e instanceof SoloButton && splitMessage.length > 4 && splitMessage[1].equals("track") &&
+                        splitMessage[3].equals("solo")) { //Checks the message is of the right length and is a track solo message.
 
-                SoloButton s = (SoloButton) e; //Create a new SoloButton object from the UIElement object.
-                int channel = parseInt(splitMessage[2]);
-                if (s.getChannelNumber() == channel) {
-                    s.setPressed(message.get(0).floatValue() == 1.0F);
+                    SoloButton s = (SoloButton) e; //Create a new SoloButton object from the UIElement object.
+                    int channel = parseInt(splitMessage[2]);
+                    if (s.getChannelNumber() == channel) {
+                        s.setPressed(message.get(0).floatValue() == 1.0F);
+                    }
                 }
-            }
 
-            if (e instanceof Fader && splitMessage.length == 4 && splitMessage[1].equals("track") &&
-                    splitMessage[3].equals("volume")) {
-                Fader f = (Fader) e;
-                int channel = parseInt(splitMessage[2]);
-                if (f.getChannelNumber() == channel) {
-                    f.setFaderPercent((int) (message.get(0).floatValue() * 100));
+                if (e instanceof Fader && splitMessage.length == 4 && splitMessage[1].equals("track") &&
+                        splitMessage[3].equals("volume")) {
+                    Fader f = (Fader) e;
+                    int channel = parseInt(splitMessage[2]);
+                    if (f.getChannelNumber() == channel) {
+                        f.setFaderPercent((int) (message.get(0).floatValue() * 100));
+                    }
                 }
-            }
 
-            if (e instanceof Fader && splitMessage.length == 5 && splitMessage[1].equals("track") &&
-                    splitMessage[3].equals("vu")) {
-                Fader f = (Fader) e;
-                int channel = parseInt(splitMessage[2]);
-                if (f.getChannelNumber() == channel && splitMessage[4].equals("L")) {
-                    f.setVuL((int) (message.get(0).floatValue() * 100));
-                } else if (f.getChannelNumber() == channel && splitMessage[4].equals("R")) {
-                    f.setVuR((int) (message.get(0).floatValue() * 100));
+                if (e instanceof Fader && splitMessage.length == 5 && splitMessage[1].equals("track") &&
+                        splitMessage[3].equals("vu")) {
+                    Fader f = (Fader) e;
+                    int channel = parseInt(splitMessage[2]);
+                    if (f.getChannelNumber() == channel && splitMessage[4].equals("L")) {
+                        f.setVuL((int) (message.get(0).floatValue() * 100));
+                    } else if (f.getChannelNumber() == channel && splitMessage[4].equals("R")) {
+                        f.setVuR((int) (message.get(0).floatValue() * 100));
+                    }
                 }
-            }
 
-            if (e instanceof Fader && splitMessage.length == 4 && splitMessage[1].equals("track") &&
-                    splitMessage[3].equals("name")) {
-                Fader f = (Fader) e;
-                int channel = parseInt(splitMessage[2]);
-                if (f.getChannelNumber() == channel) f.setTrackName(message.get(0).stringValue());
-            }
-
-            if (e instanceof Pan && splitMessage.length == 4 && splitMessage[1].equals("track") &&
-                    splitMessage[3].equals("pan")) {
-                Pan p = (Pan) e;
-                int channel = parseInt(splitMessage[2]);
-                if (p.getChannelNumber() == channel) {
-                    float f = message.get(0).floatValue() * 100;
-                    p.setPercent((int) f);
+                if (e instanceof Fader && splitMessage.length == 4 && splitMessage[1].equals("track") &&
+                        splitMessage[3].equals("name")) {
+                    Fader f = (Fader) e;
+                    int channel = parseInt(splitMessage[2]);
+                    if (f.getChannelNumber() == channel) f.setTrackName(message.get(0).stringValue());
                 }
-            }
 
-            if (e instanceof TransportButton) {
-                TransportButton tb = (TransportButton) e;
-                if (tb.getTransportType() == TransportType.CLICK && splitMessage.length == 2 && splitMessage[1].equals("click"))
-                    tb.setPressed(message.get(0).floatValue() == 1.0F);
+                if (e instanceof Pan && splitMessage.length == 4 && splitMessage[1].equals("track") &&
+                        splitMessage[3].equals("pan")) {
+                    Pan p = (Pan) e;
+                    int channel = parseInt(splitMessage[2]);
+                    if (p.getChannelNumber() == channel) {
+                        float f = message.get(0).floatValue() * 100;
+                        p.setPercent((int) f);
+                    }
+                }
 
-                if (tb.getTransportType() == TransportType.PLAY && splitMessage.length == 2 && splitMessage[1].equals("play"))
-                    tb.setPressed(message.get(0).floatValue() == 1.0F);
+                if (e instanceof TransportButton) {
+                    TransportButton tb = (TransportButton) e;
+                    if (tb.getTransportButtonType() == TransportButtonType.CLICK && splitMessage.length == 2 && splitMessage[1].equals("click"))
+                        tb.setPressed(message.get(0).floatValue() == 1.0F);
 
-                if (tb.getTransportType() == TransportType.LOOP && splitMessage.length == 2 && splitMessage[1].equals("repeat"))
-                    tb.setPressed(message.get(0).floatValue() == 1.0F);
+                    if (tb.getTransportButtonType() == TransportButtonType.PLAY && splitMessage.length == 2 && splitMessage[1].equals("play"))
+                        tb.setPressed(message.get(0).floatValue() == 1.0F);
+
+                    if (tb.getTransportButtonType() == TransportButtonType.LOOP && splitMessage.length == 2 && splitMessage[1].equals("repeat"))
+                        tb.setPressed(message.get(0).floatValue() == 1.0F);
+                }
             }
         }
+    }
+
+    public void drawStartupScreen() {
+        StartupButton newLayout = new StartupButton(width / 2, height / 2 - 50, StartupButtonType.NEW_LAYOUT);
+        StartupButton loadLayout = new StartupButton(width / 2, height / 2, StartupButtonType.LOAD_LAYOUT);
+        StartupButton settings = new StartupButton(width / 2, height / 2 + 50, StartupButtonType.SETTINGS);
+
+    }
+
+    public void drawTestLayout() {
+        surface.setResizable(true);
+        for (int i = 0; i < 16; i++) {
+            int x = (50 * (i + 1)) - 15;
+            SoloButton s = new SoloButton(x, 75, i + 1);
+            MuteButton m = new MuteButton(x, 125, i + 1);
+            Pan p = new Pan(x, 175, i + 1);
+            Fader f = new Fader(x, 325, i + 1);
+        }
+        ModeButton mo = new ModeButton(85, 25);
+        TransportButton t1 = new TransportButton(195, 25, TransportButtonType.PLAY);
+        TransportButton t2 = new TransportButton(260, 25, TransportButtonType.CLICK);
+        TransportButton t3 = new TransportButton(325, 25, TransportButtonType.LOOP);
     }
 
     public static OSCControl getApp() {
@@ -240,5 +279,13 @@ public class OSCControl extends PApplet {
 
     public void setDoubleClick(boolean doubleClick) {
         isDoubleClick = doubleClick;
+    }
+
+    public AppMode getMode() {
+        return mode;
+    }
+
+    public void setMode(AppMode mode) {
+        this.mode = mode;
     }
 }

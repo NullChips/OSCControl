@@ -1,5 +1,6 @@
 package ga.tomj.osccontrol.gui;
 
+import ga.tomj.osccontrol.AppMode;
 import ga.tomj.osccontrol.OSCControl;
 import processing.core.PConstants;
 
@@ -10,10 +11,21 @@ public abstract class UIElement {
     private int xOffset;
     private int yOffset;
     protected boolean editable;
+    protected AppMode mode;
 
     protected UIElement(int x, int y) {
         this.x = x;
         this.y = y;
+        this.mode = AppMode.RUN; //Default to RUN AppMode if none is specified.
+        app = OSCControl.getApp();
+        UIManager.getMgr().getElements().add(this); //Add this UI element into the ArrayList of all UI elements.
+        editable = false;
+    }
+
+    protected UIElement(int x, int y, AppMode mode) {
+        this.x = x;
+        this.y = y;
+        this.mode = mode;
         app = OSCControl.getApp();
         UIManager.getMgr().getElements().add(this); //Add this UI element into the ArrayList of all UI elements.
         editable = false;
@@ -28,13 +40,7 @@ public abstract class UIElement {
     //This method will be used to check the relative position of the mouse to the position of the center of the element.
     //If the mouse position is inside the element, this returns true.
     public abstract boolean mouseInElement();
-
-    public void removeElement() {
-        UIManager.getMgr().getElements().remove(this);
-        app.rectMode(PConstants.CENTER);
-        app.rect(1, 2, 3, 5);
-    }
-
+    
     protected void setOffsets() {
         xOffset = app.mouseX - x;
         yOffset = app.mouseY - y;
@@ -63,4 +69,7 @@ public abstract class UIElement {
         return y;
     }
 
+    public AppMode getMode() {
+        return mode;
+    }
 }
