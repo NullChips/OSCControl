@@ -68,12 +68,7 @@ public class Pan extends UIElement {
             if (percent > 100) percent = 100;
             else if (percent < 0) percent = 0;
 
-            OscMessage message = new OscMessage("/track/" + channelNumber + "/pan");
-            float f = percent;
-            f = f / 100;
-            System.out.println(f);
-            message.add(f);
-            app.getOscp5().send(message, app.getReaperAddr());
+            sendOscMessage();
         }
 
         if (mouseInElement() && !UIManager.getMgr().isEditMode() && UIManager.getMgr().getElementDragged() == null) {
@@ -84,8 +79,18 @@ public class Pan extends UIElement {
     public void doubleClick() {
         if (mouseInElement() && !UIManager.getMgr().isEditMode()) {
             percent = 50;
+            sendOscMessage();
             app.setDoubleClick(false);
         }
+    }
+
+    private void sendOscMessage() {
+        OscMessage message = new OscMessage("/track/" + channelNumber + "/pan");
+        float f = percent;
+        f = f / 100;
+        System.out.println(f);
+        message.add(f);
+        app.getOscp5().send(message, app.getReaperAddr());
     }
 
     public void setPercent(int percent) {

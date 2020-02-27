@@ -6,19 +6,19 @@ import ga.tomj.osccontrol.OSCControl;
 import java.awt.*;
 
 public enum StartupButtonType {
-    NEW_LAYOUT("New Layout", new Color(128,128,128)) {
+    NEW_LAYOUT("New Layout", new Color(128,128,128), -50) {
         public void mousePressed() {
             app.setMode(AppMode.RUN);
             app.drawTestLayout();
         }
-    }, LOAD_LAYOUT("Load Layout", new Color(128,128,128)) {
+    }, LOAD_LAYOUT("Load Layout", new Color(128,128,128), 0) {
         public void mousePressed() {
             //TODO Implement loading layouts.
         }
-    }, SETTINGS("Settings", new Color(128,128,128)) {
+    }, SETTINGS("Settings", new Color(128,128,128), 50) {
         public void mousePressed() {
             app.setMode(AppMode.SETTINGS);
-            //TODO Draw settings page.
+            app.drawSettingsScreen();
         }
     };
 
@@ -26,11 +26,13 @@ public enum StartupButtonType {
 
     private String buttonName;
     private Color colour;
+    private int yOffset;
     protected OSCControl app;
 
-    StartupButtonType(String buttonName, Color colour) {
+    StartupButtonType(String buttonName, Color colour, int yOffset) {
         this.buttonName = buttonName;
         this.colour = colour;
+        this.yOffset = yOffset;
         this.app = OSCControl.getApp();
     }
 
@@ -40,5 +42,9 @@ public enum StartupButtonType {
 
     public Color getColour() {
         return colour;
+    }
+
+    public int getYOffset() {
+        return yOffset;
     }
 }

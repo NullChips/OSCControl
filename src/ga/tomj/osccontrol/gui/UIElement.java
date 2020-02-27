@@ -61,6 +61,10 @@ public abstract class UIElement {
         mousePressed();
     }
 
+    public void keyPressed(char key) {
+
+    }
+
     public int getX() {
         return x;
     }

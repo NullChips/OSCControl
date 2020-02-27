@@ -1,15 +1,13 @@
 package ga.tomj.osccontrol;
 
-import ga.tomj.osccontrol.gui.Fader;
-import ga.tomj.osccontrol.gui.Pan;
-import ga.tomj.osccontrol.gui.UIElement;
-import ga.tomj.osccontrol.gui.UIManager;
+import ga.tomj.osccontrol.gui.*;
 import ga.tomj.osccontrol.gui.buttons.*;
 import netP5.NetAddress;
 import oscP5.OscMessage;
 import oscP5.OscP5;
 import processing.core.PApplet;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -51,7 +49,7 @@ public class OSCControl extends PApplet {
         background(32); //The background is drawn in the setup method as well to avoid the visible lag that occurs when OSC is connecting.
         connectOSC("127.0.0.1", 8000, 9000);
 
-        surface.setResizable(false);
+        surface.setResizable(true);
         frameRate(30); //Decrease framerate to decrease processing load.
 
         app = this;
@@ -67,15 +65,17 @@ public class OSCControl extends PApplet {
     //This method is repeatedly run throughout the programs life.
     public void draw() {
         ArrayList<UIElement> removed = new ArrayList<>();
-        System.out.println(UIManager.getMgr().getElements().size());
         background(32);
         //Render all the UI elements.
         for (UIElement e : UIManager.getMgr().getElements()) {
             if (e.getMode() == mode) {
                 e.render();
+                if (e instanceof StartupButton) {
+                    StartupButton sb = (StartupButton) e; //Update the coordinates of the startup buttons to keep them central.
+                    sb.updateCoordinates();
+                }
             } else {
-                removed.add(e);
-                //If the element is not from the current mode, remove it (saves on CPU power).
+                removed.add(e); //If the element is not from the current mode, remove it (saves on CPU power).
             }
         }
 
@@ -125,7 +125,9 @@ public class OSCControl extends PApplet {
 
     public void keyPressed() {
         if (key != CODED) {
-
+            for (UIElement e : UIManager.getMgr().getElements()) {
+                e.keyPressed(key);
+            }
         }
     }
 
@@ -134,9 +136,35 @@ public class OSCControl extends PApplet {
         this.ip = ip;
         this.sendPort = sendPort;
         this.receivePort = receivePort;
+        this.previousSendPortEntry = sendPort + "";
+        this.previousReceivePortEntry = receivePort + "";
 
         reaperAddr = new NetAddress(ip, receivePort);
         oscp5 = new OscP5(this, sendPort);
+    }
+
+    public boolean connectOSC() {
+        previousReceivePortEntry = receivePortTextBox.getText();
+        previousSendPortEntry = sendPortTextBox.getText();
+        ip = ipTextBox.getText();
+
+        try {
+            receivePort = Integer.parseInt(previousReceivePortEntry);
+        } catch (NumberFormatException e) {
+            System.out.println("Receive port given was not a number!");
+            return false;
+        }
+
+        try {
+            sendPort = Integer.parseInt(previousSendPortEntry);
+        } catch (NumberFormatException e) {
+            System.out.println("Send port given was not a number!");
+            return false;
+        }
+
+        reaperAddr = new NetAddress(ip, receivePort);
+        oscp5 = new OscP5(this, sendPort);
+        return true;
     }
 
     public void reloadData() {
@@ -244,14 +272,22 @@ public class OSCControl extends PApplet {
     }
 
     public void drawStartupScreen() {
-        StartupButton newLayout = new StartupButton(width / 2, height / 2 - 50, StartupButtonType.NEW_LAYOUT);
-        StartupButton loadLayout = new StartupButton(width / 2, height / 2, StartupButtonType.LOAD_LAYOUT);
-        StartupButton settings = new StartupButton(width / 2, height / 2 + 50, StartupButtonType.SETTINGS);
+        UIManager.getMgr().getElements().clear();
+        mode = AppMode.STARTUP;
+
+        ipTextBox = null;
+        receivePortTextBox = null;
+        sendPortTextBox = null;
+
+        surface.setResizable(true);
+        surface.setSize(1050, 650);
+        StartupButton newLayout = new StartupButton(width / 2, (height / 2) - 50, StartupButtonType.NEW_LAYOUT);
+        StartupButton loadLayout = new StartupButton(width / 2, (height / 2), StartupButtonType.LOAD_LAYOUT);
+        StartupButton settings = new StartupButton(width / 2, (height / 2 + 50), StartupButtonType.SETTINGS);
 
     }
 
     public void drawTestLayout() {
-        surface.setResizable(true);
         for (int i = 0; i < 16; i++) {
             int x = (50 * (i + 1)) - 15;
             SoloButton s = new SoloButton(x, 75, i + 1);
@@ -263,6 +299,42 @@ public class OSCControl extends PApplet {
         TransportButton t1 = new TransportButton(195, 25, TransportButtonType.PLAY);
         TransportButton t2 = new TransportButton(260, 25, TransportButtonType.CLICK);
         TransportButton t3 = new TransportButton(325, 25, TransportButtonType.LOOP);
+    }
+
+    private TextBox ipTextBox;
+    private TextBox receivePortTextBox;
+    private TextBox sendPortTextBox;
+
+    private String previousReceivePortEntry;
+    private String previousSendPortEntry;
+
+    public void drawSettingsScreen() {
+        UIManager.getMgr().getElements().clear();
+
+        surface.setSize(450, 300);
+        surface.setResizable(false);
+
+        //(width / 2) - 40
+
+        Text settingsText = new Text((width / 2), 20, 24, "Network Settings:",
+                new Color(255, 255, 255), AppMode.SETTINGS);
+
+        Text ipText = new Text((width / 2) - 80, (height / 2) - 52, 15, "IP:", RIGHT, CENTER,
+                new Color(255, 255, 255), AppMode.SETTINGS);
+        ipTextBox = new TextBox(width / 2, (height / 2) - 50, 150, 35, 15, new Color(128, 128, 128),
+                new Color(0), ip);
+
+        Text sendPortText = new Text((width / 2) - 80, (height / 2) - 2, 15, "Device Port:", RIGHT, CENTER,
+                new Color(255, 255, 255), AppMode.SETTINGS);
+        sendPortTextBox = new TextBox(width / 2, (height / 2), 150, 35, 15, new Color(128, 128, 128),
+                new Color(0), previousSendPortEntry);
+
+        Text receivePortText = new Text((width / 2) - 80, (height / 2) + 52, 15, "Listen Port:", RIGHT, CENTER,
+                new Color(255, 255, 255), AppMode.SETTINGS);
+        receivePortTextBox = new TextBox(width / 2, (height / 2) + 50, 150, 35, 15, new Color(128, 128, 128),
+                new Color(0), previousReceivePortEntry);
+
+        SaveSettingsButton ssb = new SaveSettingsButton(width / 2, (height / 2) + 100);
     }
 
     public static OSCControl getApp() {

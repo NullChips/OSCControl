@@ -13,8 +13,14 @@ public class StartupButton extends Button {
     }
 
     public void mousePressed() {
-        if(mouseInElement()) {
+        if (mouseInElement()) {
             type.mousePressed();
         }
     }
+
+    public void updateCoordinates() {
+        x = app.width / 2;
+        y = (app.height / 2) + type.getYOffset();
+    }
+
 }

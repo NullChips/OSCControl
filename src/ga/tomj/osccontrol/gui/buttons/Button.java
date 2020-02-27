@@ -40,51 +40,43 @@ public abstract class Button extends UIElement {
         if (mouseInElement() && UIManager.getMgr().getElementDragged() == null) { //When the mouse is hovering over a button, a white stroke is drawn.
             if (pressed) { //If the button is pressed, render the button with a fill and a white stroke.
                 app.fill(colour.getRed() / 2, colour.getGreen() / 2, colour.getBlue() / 2);
-                app.stroke(255);
-                app.strokeCap(app.ROUND);
-                app.strokeWeight(2);
-                app.rectMode(app.CENTER);
-                app.textAlign(app.CENTER, app.CENTER);
-                app.textSize(12);
-                app.rect(x, y, sizeX, sizeY, 3);
-                app.fill(255);
-                app.text(label, x, y - 2);
+                drawWhiteBorderRect();
             } else { //If the button is not pressed, render the button without a fill and a white stroke.
                 app.noFill();
-                app.stroke(255);
-                app.strokeCap(app.ROUND);
-                app.strokeWeight(2);
-                app.rectMode(app.CENTER);
-                app.textAlign(app.CENTER, app.CENTER);
-                app.textSize(12);
-                app.rect(x, y, sizeX, sizeY, 3);
-                app.fill(255);
-                app.text(label, x, y - 2);
+                drawWhiteBorderRect();
             }
             return; //Exit - the button has been rendered!
         } else if (pressed) { //If the button has been pressed, render the button with a fill.
             app.fill(colour.getRed() / 2, colour.getGreen() / 2, colour.getBlue() / 2);
-            app.stroke(colour.getRed(), colour.getGreen(), colour.getBlue());
-            app.strokeCap(app.ROUND);
-            app.strokeWeight(2);
-            app.rectMode(app.CENTER);
-            app.textAlign(app.CENTER, app.CENTER);
-            app.textSize(12);
-            app.rect(x, y, sizeX, sizeY, 3);
-            app.fill(255);
-            app.text(label, x, y - 2);
+            drawRect();
         } else { //If the button has not been pressed, render the button without a fill.
             app.noFill();
-            app.stroke(colour.getRed(), colour.getGreen(), colour.getBlue());
-            app.strokeCap(app.ROUND);
-            app.strokeWeight(2);
-            app.rectMode(app.CENTER);
-            app.textAlign(app.CENTER, app.CENTER);
-            app.textSize(12);
-            app.rect(x, y, sizeX, sizeY, 3);
-            app.fill(255);
-            app.text(label, x, y - 2);
+            drawRect();
         }
+    }
+
+    private void drawRect() {
+        app.stroke(colour.getRed(), colour.getGreen(), colour.getBlue());
+        app.strokeCap(app.ROUND);
+        app.strokeWeight(2);
+        app.rectMode(app.CENTER);
+        app.textAlign(app.CENTER, app.CENTER);
+        app.textSize(12);
+        app.rect(x, y, sizeX, sizeY, 3);
+        app.fill(255);
+        app.text(label, x, y - 2);
+    }
+
+    private void drawWhiteBorderRect() {
+        app.stroke(255);
+        app.strokeCap(app.ROUND);
+        app.strokeWeight(2);
+        app.rectMode(app.CENTER);
+        app.textAlign(app.CENTER, app.CENTER);
+        app.textSize(12);
+        app.rect(x, y, sizeX, sizeY, 3);
+        app.fill(255);
+        app.text(label, x, y - 2);
     }
 
     public boolean mouseInElement() {
