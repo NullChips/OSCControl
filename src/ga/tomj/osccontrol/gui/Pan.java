@@ -44,9 +44,12 @@ public class Pan extends UIElement {
 
     public void mousePressed() {
         setOffsets();
-        i = 0;
-        mouseY = app.mouseY;
-        previousPercent = percent;
+        if(mouseInElement()) {
+            UIManager.getMgr().setRecentElement(this);
+            i = 0;
+            mouseY = app.mouseY;
+            previousPercent = percent;
+        }
     }
 
     public boolean mouseInElement() {

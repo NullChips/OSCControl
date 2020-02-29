@@ -1,6 +1,5 @@
 package ga.tomj.osccontrol.gui.buttons;
 
-import ga.tomj.osccontrol.OSCControl;
 import ga.tomj.osccontrol.gui.UIManager;
 import oscP5.OscMessage;
 
@@ -18,13 +17,16 @@ public class MuteButton extends Button {
 
     public void mousePressed() {
         setOffsets();
-        if (mouseInElement() && !UIManager.getMgr().isEditMode()) {
-            OscMessage message = new OscMessage("/track/" + channelNumber + "/mute");
-            if (isPressed())
-                message.add(0.0F);
-            else
-                message.add(1.0F);
-            app.getOscp5().send(message, app.getReaperAddr());
+        if (mouseInElement()) {
+            UIManager.getMgr().setRecentElement(this);
+            if (!UIManager.getMgr().isEditMode()) {
+                OscMessage message = new OscMessage("/track/" + channelNumber + "/mute");
+                if (isPressed())
+                    message.add(0.0F);
+                else
+                    message.add(1.0F);
+                app.getOscp5().send(message, app.getReaperAddr());
+            }
         }
     }
 

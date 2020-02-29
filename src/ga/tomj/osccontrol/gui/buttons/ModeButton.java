@@ -21,6 +21,7 @@ public class ModeButton extends Button {
 
     public void mousePressed() {
         if (mouseInElement()) {
+            UIManager.getMgr().setRecentElement(this);
             UIManager.getMgr().setEditMode(!UIManager.getMgr().isEditMode());
             if (UIManager.getMgr().isEditMode()) {
                 setLabel("Change to Play Mode");

@@ -30,7 +30,7 @@ public class Fader extends UIElement {
     }
 
     public void render() {
-        if(!UIManager.getMgr().isEditMode()) drawVU();
+        if (!UIManager.getMgr().isEditMode()) drawVU();
         drawFader();
         drawTrackName();
     }
@@ -40,12 +40,12 @@ public class Fader extends UIElement {
         String[] splitName = trackName.split(" ");
         ArrayList<String> lines = new ArrayList<>();
         String currentLine = null;
-        for(String s : splitName) {
+        for (String s : splitName) {
             if (currentLine != null && currentLine.length() > 3) {
                 lines.add(currentLine);
                 currentLine = null;
             }
-            if(currentLine == null) currentLine = s;
+            if (currentLine == null) currentLine = s;
             else currentLine = currentLine + " " + s;
         }
         lines.add(currentLine);
@@ -55,8 +55,8 @@ public class Fader extends UIElement {
         app.shapeMode(app.CENTER);
 
         int lineNo = 1;
-        for(String s : lines) {
-            int lineY = (y + (faderHeight/2) + 10) + (lineNo * 10);
+        for (String s : lines) {
+            int lineY = (y + (faderHeight / 2) + 10) + (lineNo * 10);
             app.text(s, x, lineY);
             lineNo++;
         }
@@ -73,7 +73,7 @@ public class Fader extends UIElement {
         minY = y - (faderHeight / 2) + (rHeight / 2);
         maxY = y + (faderHeight / 2) - (rHeight / 2);
         calcRectY();
-        if(UIManager.getMgr().getElementDragged() == this) {
+        if (UIManager.getMgr().getElementDragged() == this) {
             app.fill(100, 100, 100, 127);
         } else {
             app.fill(192, 192, 192, 127);
@@ -99,6 +99,7 @@ public class Fader extends UIElement {
         return rY;
     }
 
+
     private int calcFaderPercentage(int newY) {
         float minYF = (float) minY - faderHeight;
         float maxYF = (float) maxY - faderHeight;
@@ -111,16 +112,19 @@ public class Fader extends UIElement {
 
     public void mousePressed() {
         setOffsets();
-        if (!UIManager.getMgr().isEditMode() && mouseInElement()) {
-            if (app.mouseY > minY && app.mouseY < maxY) {
-                calcFaderPercentage(app.mouseY);
-                sendOscMessage();
-            } else if (app.mouseY < minY) {
-                faderPercent = 0;
-                sendOscMessage();
-            } else {
-                faderPercent = 100;
-                sendOscMessage();
+        if (mouseInElement()) {
+            UIManager.getMgr().setRecentElement(this);
+            if (!UIManager.getMgr().isEditMode()) {
+                if (app.mouseY > minY && app.mouseY < maxY) {
+                    calcFaderPercentage(app.mouseY);
+                    sendOscMessage();
+                } else if (app.mouseY < minY) {
+                    faderPercent = 0;
+                    sendOscMessage();
+                } else {
+                    faderPercent = 100;
+                    sendOscMessage();
+                }
             }
         }
     }
@@ -147,7 +151,7 @@ public class Fader extends UIElement {
     }
 
     public void doubleClick() {
-        if(mouseInElement() && !UIManager.getMgr().isEditMode()) {
+        if (mouseInElement() && !UIManager.getMgr().isEditMode()) {
             faderPercent = 71; //This is the value which gives a level of 0 in Reaper.
             sendOscMessage();
             app.setDoubleClick(false);

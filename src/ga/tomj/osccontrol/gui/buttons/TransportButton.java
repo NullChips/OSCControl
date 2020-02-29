@@ -15,9 +15,12 @@ public class TransportButton extends Button {
 
     public void mousePressed() {
         setOffsets();
-        if(!UIManager.getMgr().isEditMode() && mouseInElement()) {
-            OscMessage message = new OscMessage(transportButtonType.getOscMessage());
-            app.getOscp5().send(message, app.getReaperAddr());
+        if (mouseInElement()) {
+            UIManager.getMgr().setRecentElement(this);
+            if (!UIManager.getMgr().isEditMode()) {
+                OscMessage message = new OscMessage(transportButtonType.getOscMessage());
+                app.getOscp5().send(message, app.getReaperAddr());
+            }
         }
     }
 

@@ -8,6 +8,7 @@ public class UIManager {
     private CopyOnWriteArrayList<UIElement> elements;
     private boolean editMode;
     private UIElement elementDragged;
+    private UIElement recentElement;
 
     private static UIManager mgr;
 
@@ -18,6 +19,7 @@ public class UIManager {
         if (elements == null) elements = new CopyOnWriteArrayList<>();
         editMode = false;
         elementDragged = null;
+        recentElement = null;
     }
 
     public static UIManager getMgr() {
@@ -47,5 +49,13 @@ public class UIManager {
 
     public void setElementDragged(UIElement elementDragged) {
         this.elementDragged = elementDragged;
+    }
+
+    public UIElement getRecentElement() {
+        return recentElement;
+    }
+
+    public void setRecentElement(UIElement recentElement) {
+        this.recentElement = recentElement;
     }
 }

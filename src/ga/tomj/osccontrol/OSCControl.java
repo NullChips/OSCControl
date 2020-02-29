@@ -50,7 +50,7 @@ public class OSCControl extends PApplet {
         connectOSC("127.0.0.1", 8000, 9000);
 
         surface.setResizable(true);
-        frameRate(30); //Decrease framerate to decrease processing load.
+        frameRate(60); //Decrease framerate to decrease processing load.
 
         app = this;
         mode = AppMode.STARTUP;
@@ -299,6 +299,7 @@ public class OSCControl extends PApplet {
         TransportButton t1 = new TransportButton(195, 25, TransportButtonType.PLAY);
         TransportButton t2 = new TransportButton(260, 25, TransportButtonType.CLICK);
         TransportButton t3 = new TransportButton(325, 25, TransportButtonType.LOOP);
+        reloadData();
     }
 
     private TextBox ipTextBox;
