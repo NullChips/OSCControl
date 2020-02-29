@@ -7,6 +7,8 @@ import java.awt.*;
 
 public class SoloButton extends Button {
 
+    public static final Color COLOUR = new Color(255, 178, 33);
+
     private int channelNumber;
 
     public SoloButton(int x, int y, int channelNumber) {

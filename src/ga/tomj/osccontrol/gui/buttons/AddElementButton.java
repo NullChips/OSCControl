@@ -2,17 +2,26 @@ package ga.tomj.osccontrol.gui.buttons;
 
 import ga.tomj.osccontrol.gui.UIManager;
 
-import java.awt.*;
-
 public class AddElementButton extends Button {
 
-    public AddElementButton(int x, int y, String label, Color colour) {
-        super(x, y, label, colour);
+    private ElementType element;
+
+    public AddElementButton(int x, int y, ElementType element) {
+        super(x, y, 110, 35, element.getLabel(), element.getColor());
+        this.element = element;
+        setPressed(true);
+    }
+
+    public AddElementButton(int x, int y, int sizeX, int sizeY, ElementType element) {
+        super(x, y, sizeX, sizeY, element.getLabel(), element.getColor());
+        this.element = element;
+        setPressed(true);
     }
 
     public void mousePressed() {
-        if(mouseInElement()) {
+        if (mouseInElement()) {
             UIManager.getMgr().setRecentElement(this);
+            element.mouseClicked();
         }
     }
 }

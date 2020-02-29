@@ -5,16 +5,16 @@ import oscP5.OscMessage;
 
 import java.awt.*;
 
-public class MuteButton extends Button {
-
-    public static final Color COLOUR = new Color(255, 0, 0);
+public class RecordArmButton extends Button {
 
     private int channelNumber;
 
-    public MuteButton(int x, int y, int channelNumber) {
-        super(x, y, "M", COLOUR);
+    public static final Color COLOUR = new Color(137, 64, 255);
+
+    public RecordArmButton(int x, int y, int channelNumber) {
+        super(x, y, "R", new Color(137, 64, 255));
         this.channelNumber = channelNumber;
-        editable = true;
+        this.editable = true;
     }
 
     public void mousePressed() {
@@ -22,7 +22,7 @@ public class MuteButton extends Button {
         if (mouseInElement()) {
             UIManager.getMgr().setRecentElement(this);
             if (!UIManager.getMgr().isEditMode()) {
-                OscMessage message = new OscMessage("/track/" + channelNumber + "/mute");
+                OscMessage message = new OscMessage("/track/" + channelNumber + "/recarm");
                 if (isPressed())
                     message.add(0.0F);
                 else

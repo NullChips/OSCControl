@@ -7,18 +7,30 @@ import java.awt.*;
 
 public class TextBox extends UIElement {
 
-    private int sizeX;
+    protected int sizeX;
     private int sizeY;
-    private int padding;
+    protected int padding;
     private int textSize;
     private Color boxColour;
     private Color textColour;
-    private boolean isCurrentlyEditing;
-    private String text;
+    protected boolean isCurrentlyEditing;
+    protected String text;
 
 
     public TextBox(int x, int y, int sizeX, int sizeY, int textSize, Color boxColour, Color textColour, String text) {
         super(x, y, AppMode.SETTINGS);
+        this.sizeX = sizeX;
+        this.sizeY = sizeY;
+        this.textSize = textSize;
+        this.boxColour = boxColour;
+        this.textColour = textColour;
+        this.isCurrentlyEditing = false;
+        this.text = text;
+        this.padding = 4;
+    }
+
+    public TextBox(int x, int y, int sizeX, int sizeY, int textSize, Color boxColour, Color textColour, String text, AppMode mode) {
+        super(x, y, mode);
         this.sizeX = sizeX;
         this.sizeY = sizeY;
         this.textSize = textSize;

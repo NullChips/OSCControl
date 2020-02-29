@@ -7,6 +7,7 @@ public class UIManager {
     a flexible and dynamic array which can be changed as the user adds or removes objects. */
     private CopyOnWriteArrayList<UIElement> elements;
     private boolean editMode;
+    private boolean deleteMode;
     private UIElement elementDragged;
     private UIElement recentElement;
 
@@ -16,10 +17,13 @@ public class UIManager {
         /* Because the elements ArrayList is accessed from different threads (draw(), mouseClick(), etc) a
         a CopyOnWriteArrayList is used. This allows for the arraylist to be accessed and modified from different threads
         easily. */
-        if (elements == null) elements = new CopyOnWriteArrayList<>();
-        editMode = false;
-        elementDragged = null;
-        recentElement = null;
+        if (this.elements == null) {
+            this.elements = new CopyOnWriteArrayList<>();
+        }
+        this.editMode = false;
+        this.deleteMode = false;
+        this.elementDragged = null;
+        this.recentElement = null;
     }
 
     public static UIManager getMgr() {
@@ -57,5 +61,13 @@ public class UIManager {
 
     public void setRecentElement(UIElement recentElement) {
         this.recentElement = recentElement;
+    }
+
+    public boolean isDeleteMode() {
+        return deleteMode;
+    }
+
+    public void setDeleteMode(boolean deleteMode) {
+        this.deleteMode = deleteMode;
     }
 }

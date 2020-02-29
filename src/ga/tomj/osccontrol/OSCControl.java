@@ -8,7 +8,6 @@ import oscP5.OscP5;
 import processing.core.PApplet;
 
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 //This class extends PApplet, as this program was written in fully fledged Java, using the Processing libraries.
@@ -64,10 +63,18 @@ public class OSCControl extends PApplet {
 
     //This method is repeatedly run throughout the programs life.
     public void draw() {
-        ArrayList<UIElement> removed = new ArrayList<>();
         background(32);
+
         //Render all the UI elements.
         for (UIElement e : UIManager.getMgr().getElements()) {
+            if (!UIManager.getMgr().isEditMode()) {
+                //If the app is not in edit mode, remove the elements that are drawn during the edit mode.
+                if (e instanceof Line || e instanceof AddElementButton || e instanceof EditModeText ||
+                        e instanceof ChannelNumberTextBox || e instanceof ChannelNumberButton) {
+                    UIManager.getMgr().getElements().remove(e);
+                }
+            }
+
             if (e.getMode() == mode) {
                 e.render();
                 if (e instanceof StartupButton) {
@@ -75,14 +82,9 @@ public class OSCControl extends PApplet {
                     sb.updateCoordinates();
                 }
             } else {
-                removed.add(e); //If the element is not from the current mode, remove it (saves on CPU power).
+                UIManager.getMgr().getElements().remove(e); //If the element is not from the current mode, remove it (saves on CPU power).
             }
         }
-
-        for (UIElement e : removed) {
-            UIManager.getMgr().getElements().remove(e);
-        }
-
         if (isDoubleClick) {
             if (doubleClickCounter < 30) {
                 doubleClickCounter++;
@@ -178,9 +180,22 @@ public class OSCControl extends PApplet {
 
             if (e instanceof SoloButton) {
                 SoloButton s = (SoloButton) e;
-                //This line uses an ? operator to check if the channel number of this element is greater than the current
-                //number of max channels. If it is, it sets the max channels to this elements channel number.
                 maxChannels = (s.getChannelNumber() > maxChannels) ? s.getChannelNumber() : maxChannels;
+            }
+
+            if (e instanceof RecordArmButton) {
+                RecordArmButton r = (RecordArmButton) e;
+                maxChannels = (r.getChannelNumber() > maxChannels) ? r.getChannelNumber() : maxChannels;
+            }
+
+            if (e instanceof Fader) {
+                Fader f = (Fader) e;
+                maxChannels = (f.getChannelNumber() > maxChannels) ? f.getChannelNumber() : maxChannels;
+            }
+
+            if (e instanceof Pan) {
+                Pan p = (Pan) e;
+                maxChannels = (p.getChannelNumber() > maxChannels) ? p.getChannelNumber() : maxChannels;
             }
         }
 
@@ -197,6 +212,10 @@ public class OSCControl extends PApplet {
             print("### Received an osc message.");
             println(" addrpattern: " + messageString + "   Typetag: " + message.typetag() + "   Length: " + splitMessage.length);
 
+            if (splitMessage.length == 3 && splitMessage[1].equals("time") &&
+                    splitMessage[2].equals("str")) {
+                Timecode.setTc(message.get(0).stringValue());
+            }
 
             for (UIElement e : UIManager.getMgr().getElements()) {
                 if (e instanceof MuteButton && splitMessage.length > 4 && splitMessage[1].equals("track") &&
@@ -216,6 +235,16 @@ public class OSCControl extends PApplet {
                     int channel = parseInt(splitMessage[2]);
                     if (s.getChannelNumber() == channel) {
                         s.setPressed(message.get(0).floatValue() == 1.0F);
+                    }
+                }
+
+                if (e instanceof RecordArmButton && splitMessage.length > 4 && splitMessage[1].equals("track") &&
+                        splitMessage[3].equals("recarm")) { //Checks the message is of the right length and is a track solo message.
+
+                    RecordArmButton r = (RecordArmButton) e; //Create a new RecordArmButton object from the UIElement object.
+                    int channel = parseInt(splitMessage[2]);
+                    if (r.getChannelNumber() == channel) {
+                        r.setPressed(message.get(0).floatValue() == 1.0F);
                     }
                 }
 
@@ -290,16 +319,26 @@ public class OSCControl extends PApplet {
     public void drawTestLayout() {
         for (int i = 0; i < 16; i++) {
             int x = (50 * (i + 1)) - 15;
-            SoloButton s = new SoloButton(x, 75, i + 1);
-            MuteButton m = new MuteButton(x, 125, i + 1);
-            Pan p = new Pan(x, 175, i + 1);
-            Fader f = new Fader(x, 325, i + 1);
+            RecordArmButton r = new RecordArmButton(x, 75, i + 1);
+            SoloButton s = new SoloButton(x, 125, i + 1);
+            MuteButton m = new MuteButton(x, 175, i + 1);
+            Pan p = new Pan(x, 225, i + 1);
+            Fader f = new Fader(x, 375, i + 1);
         }
         ModeButton mo = new ModeButton(85, 25);
         TransportButton t1 = new TransportButton(195, 25, TransportButtonType.PLAY);
         TransportButton t2 = new TransportButton(260, 25, TransportButtonType.CLICK);
         TransportButton t3 = new TransportButton(325, 25, TransportButtonType.LOOP);
+        Timecode tc = new Timecode(410, 25);
         reloadData();
+    }
+
+    public void saveLayout() {
+
+    }
+
+    public void loadLayout() {
+
     }
 
     private TextBox ipTextBox;
