@@ -18,7 +18,9 @@ public abstract class UIElement {
         this.y = y;
         this.mode = AppMode.RUN; //Default to RUN AppMode if none is specified.
         app = OSCControl.getApp();
-        UIManager.getMgr().getElements().add(this); //Add this UI element into the ArrayList of all UI elements.
+        if(x > -1000 && y > -1000) { //Checks against default values given when reading XML layouts.
+            UIManager.getMgr().getElements().add(this); //Add this UI element into the ArrayList of all UI elements.
+        }
         editable = false;
     }
 

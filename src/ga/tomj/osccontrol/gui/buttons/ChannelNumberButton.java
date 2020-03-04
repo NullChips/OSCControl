@@ -28,6 +28,7 @@ public class ChannelNumberButton extends Button {
                     System.out.println("Valid channel number not given!");
                     return;
                 }
+                ModeButton.removeChannelErrorMessage();
                 ModeButton.setCurrentChannelNumber(i++);
                 System.out.println("Up Pressed " + i);
             } else {

@@ -1,13 +1,33 @@
 package ga.tomj.osccontrol;
 
 import ga.tomj.osccontrol.gui.*;
+import ga.tomj.osccontrol.gui.UIManager;
 import ga.tomj.osccontrol.gui.buttons.*;
 import netP5.NetAddress;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 import oscP5.OscMessage;
 import oscP5.OscP5;
 import processing.core.PApplet;
 
+import javax.swing.*;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.awt.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 //This class extends PApplet, as this program was written in fully fledged Java, using the Processing libraries.
@@ -70,7 +90,8 @@ public class OSCControl extends PApplet {
             if (!UIManager.getMgr().isEditMode()) {
                 //If the app is not in edit mode, remove the elements that are drawn during the edit mode.
                 if (e instanceof Line || e instanceof AddElementButton || e instanceof EditModeText ||
-                        e instanceof ChannelNumberTextBox || e instanceof ChannelNumberButton) {
+                        e instanceof ChannelNumberTextBox || e instanceof ChannelNumberButton ||
+                        e instanceof ChannelSetButton || e instanceof LayoutButton) {
                     UIManager.getMgr().getElements().remove(e);
                 }
             }
@@ -333,19 +354,12 @@ public class OSCControl extends PApplet {
         reloadData();
     }
 
-    public void saveLayout() {
-
-    }
-
-    public void loadLayout() {
-
-    }
-
     private TextBox ipTextBox;
     private TextBox receivePortTextBox;
-    private TextBox sendPortTextBox;
 
+    private TextBox sendPortTextBox;
     private String previousReceivePortEntry;
+
     private String previousSendPortEntry;
 
     public void drawSettingsScreen() {
@@ -353,8 +367,6 @@ public class OSCControl extends PApplet {
 
         surface.setSize(450, 300);
         surface.setResizable(false);
-
-        //(width / 2) - 40
 
         Text settingsText = new Text((width / 2), 20, 24, "Network Settings:",
                 new Color(255, 255, 255), AppMode.SETTINGS);
@@ -375,6 +387,503 @@ public class OSCControl extends PApplet {
                 new Color(0), previousReceivePortEntry);
 
         SaveSettingsButton ssb = new SaveSettingsButton(width / 2, (height / 2) + 100);
+    }
+
+    public void saveLayout() {
+        selectOutput("Save As:", "saveFileSelected");
+    }
+    public void loadLayout() {
+        System.out.println("got here");
+        selectInput("Open Layout:", "openFileSelected");
+    }
+    /*XML saving method. Adapted from: https://stackoverflow.com/questions/7373567/how-to-read-and-write-xml-files*/
+
+
+    public void saveFileSelected(File saveFile) {
+        if (saveFile != null) {
+            String path = saveFile.getPath();
+            if (!path.endsWith(".oscl")) {
+                path += ".oscl";
+            }
+
+            System.out.println("Directory: " + path);
+
+            Document doc;
+            Element e;
+
+            try {
+                DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+                DocumentBuilder db = dbf.newDocumentBuilder();
+                doc = db.newDocument();
+                Element root = doc.createElement("layout");
+
+                Element settings = doc.createElement("settings");
+                e = doc.createElement("size_x");
+                e.appendChild(doc.createTextNode(width + ""));
+                settings.appendChild(e);
+
+                e = doc.createElement("size_y");
+                e.appendChild(doc.createTextNode(height + ""));
+                settings.appendChild(e);
+
+                root.appendChild(settings);
+
+                Element uiElements = doc.createElement("elements");
+                for (UIElement uiElement : UIManager.getMgr().getElements()) {
+                    if (uiElement instanceof SoloButton) {
+                        SoloButton uie = (SoloButton) uiElement;
+                        Element uiXmlElement = doc.createElement("solo");
+
+                        uiXmlElement = createXYData(uiXmlElement, uie, doc);
+
+                        e = doc.createElement("channel");
+                        e.appendChild(doc.createTextNode(uie.getChannelNumber() + ""));
+                        uiXmlElement.appendChild(e);
+
+                        uiElements.appendChild(uiXmlElement);
+                    }
+
+                    if (uiElement instanceof MuteButton) {
+                        MuteButton uie = (MuteButton) uiElement;
+                        Element uiXmlElement = doc.createElement("mute");
+
+                        uiXmlElement = createXYData(uiXmlElement, uie, doc);
+
+                        e = doc.createElement("channel");
+                        e.appendChild(doc.createTextNode(uie.getChannelNumber() + ""));
+                        uiXmlElement.appendChild(e);
+
+                        uiElements.appendChild(uiXmlElement);
+                    }
+
+                    if (uiElement instanceof RecordArmButton) {
+                        RecordArmButton uie = (RecordArmButton) uiElement;
+                        Element uiXmlElement = doc.createElement("record_arm");
+
+                        uiXmlElement = createXYData(uiXmlElement, uie, doc);
+
+                        e = doc.createElement("channel");
+                        e.appendChild(doc.createTextNode(uie.getChannelNumber() + ""));
+                        uiXmlElement.appendChild(e);
+
+                        uiElements.appendChild(uiXmlElement);
+                    }
+
+                    if (uiElement instanceof Pan) {
+                        Pan uie = (Pan) uiElement;
+                        Element uiXmlElement = doc.createElement("pan");
+
+                        uiXmlElement = createXYData(uiXmlElement, uie, doc);
+
+                        e = doc.createElement("channel");
+                        e.appendChild(doc.createTextNode(uie.getChannelNumber() + ""));
+                        uiXmlElement.appendChild(e);
+
+                        uiElements.appendChild(uiXmlElement);
+                    }
+
+                    if (uiElement instanceof Fader) {
+                        Fader uie = (Fader) uiElement;
+                        Element uiXmlElement = doc.createElement("fader");
+
+                        uiXmlElement = createXYData(uiXmlElement, uie, doc);
+
+                        e = doc.createElement("channel");
+                        e.appendChild(doc.createTextNode(uie.getChannelNumber() + ""));
+                        uiXmlElement.appendChild(e);
+
+                        uiElements.appendChild(uiXmlElement);
+                    }
+
+                    if (uiElement instanceof TransportButton) {
+                        TransportButton uie = (TransportButton) uiElement;
+                        Element uiXmlElement = doc.createElement(uie.getTransportButtonType().getButtonName().toLowerCase());
+
+                        uiXmlElement = createXYData(uiXmlElement, uie, doc);
+                        uiElements.appendChild(uiXmlElement);
+                    }
+
+                    if (uiElement instanceof Timecode) {
+                        Element uiXmlElement = doc.createElement("timecode");
+
+                        uiXmlElement = createXYData(uiXmlElement, uiElement, doc);
+                        uiElements.appendChild(uiXmlElement);
+                    }
+                }
+
+                root.appendChild(uiElements);
+                doc.appendChild(root);
+
+                Transformer tr = TransformerFactory.newInstance().newTransformer();
+                tr.transform(new DOMSource(doc), new StreamResult(new FileOutputStream(path)));
+
+            } catch (ParserConfigurationException ex) {
+                ex.printStackTrace();
+                alert("File saving failed!");
+            } catch (TransformerConfigurationException ex) {
+                ex.printStackTrace();
+                alert("File saving failed!");
+            } catch (FileNotFoundException ex) {
+                ex.printStackTrace();
+                alert("File saving failed!");
+            } catch (TransformerException ex) {
+                ex.printStackTrace();
+                alert("File saving failed!");
+            }
+        }
+    }
+    public void openFileSelected(File openFile) {
+        if (openFile != null) {
+            if (!openFile.getPath().endsWith(".oscl")) { //Check if the file is a .oscl file.
+                alert("Please select a valid .oscl file.");
+                return;
+            }
+            mode = AppMode.RUN;
+            ModeButton mo = new ModeButton(85, 25);
+
+            Document doc;
+            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+
+            try {
+                DocumentBuilder db = dbf.newDocumentBuilder();
+                doc = db.parse(openFile);
+
+                Element root = doc.getDocumentElement();
+                NodeList settings = doc.getElementsByTagName("settings");
+
+                if(settings == null) {
+                    System.out.println("settings is null wtf");
+                    return;
+                }
+
+                NodeList elementList = root.getElementsByTagName("elements");
+                for (int i = 0; i < elementList.getLength(); i++) {
+                    if(elementList.item(i).getNodeType() == Node.ELEMENT_NODE) {
+                        Element uiElements = (Element) elementList.item(i);
+                        NodeList loopList;
+
+                        loopList = uiElements.getElementsByTagName("mute");
+                        for (int j = 0; j < loopList.getLength(); j++) { //Loop through all <mute> XML elements.
+                            /*
+                            Variables must be initialized to make the mute button - cannot be null. UIElement
+                            checks these values before adding the UIElement to the ArrayList of elements.
+                            */
+                            int x= -1000;
+                            int y = -1000;
+                            int channel = 0;
+
+                            if(loopList.item(j).getNodeType() == Node.ELEMENT_NODE) {
+                                Element uiXMLElement = (Element) loopList.item(j);
+                                NodeList loopList2 = uiXMLElement.getChildNodes();
+                                for (int k = 0; k < loopList2.getLength(); k++) {
+                                    if(loopList2.item(k).getNodeType() == Node.ELEMENT_NODE) {
+                                        Element e = (Element) loopList2.item(k);
+                                        switch (e.getTagName()) {
+                                            case "x":
+                                                x = Integer.parseInt(e.getTextContent());
+                                                break;
+                                            case "y":
+                                                y = Integer.parseInt(e.getTextContent());
+                                                break;
+                                            case "channel":
+                                                channel = Integer.parseInt(e.getTextContent());
+                                                break;
+                                        }
+                                    }
+                                }
+                                MuteButton ui = new MuteButton(x, y, channel);
+                            }
+                        }
+
+                        loopList = uiElements.getElementsByTagName("solo");
+                        for (int j = 0; j < loopList.getLength(); j++) { //Loop through all <solo> XML elements.
+                            /*
+                            Variables must be initialized to make the mute button - cannot be null. UIElement
+                            checks these values before adding the UIElement to the ArrayList of elements.
+                            */
+                            int x = -1000;
+                            int y = -1000;
+                            int channel = 0;
+
+                            if (loopList.item(j).getNodeType() == Node.ELEMENT_NODE) {
+                                Element uiXMLElement = (Element) loopList.item(j);
+                                NodeList loopList2 = uiXMLElement.getChildNodes();
+                                for (int k = 0; k < loopList2.getLength(); k++) {
+                                    if (loopList2.item(k).getNodeType() == Node.ELEMENT_NODE) {
+                                        Element e = (Element) loopList2.item(k);
+                                        switch (e.getTagName()) {
+                                            case "x":
+                                                x = Integer.parseInt(e.getTextContent());
+                                                break;
+                                            case "y":
+                                                y = Integer.parseInt(e.getTextContent());
+                                                break;
+                                            case "channel":
+                                                channel = Integer.parseInt(e.getTextContent());
+                                                break;
+                                        }
+                                    }
+                                }
+                                SoloButton ui = new SoloButton(x, y, channel);
+                            }
+                        }
+
+                        loopList = uiElements.getElementsByTagName("record_arm");
+                        for (int j = 0; j < loopList.getLength(); j++) { //Loop through all <record_arm> XML elements.
+                            /*
+                            Variables must be initialized to make the mute button - cannot be null. UIElement
+                            checks these values before adding the UIElement to the ArrayList of elements.
+                            */
+                            int x = -1000;
+                            int y = -1000;
+                            int channel = 0;
+
+                            if (loopList.item(j).getNodeType() == Node.ELEMENT_NODE) {
+                                Element uiXMLElement = (Element) loopList.item(j);
+                                NodeList loopList2 = uiXMLElement.getChildNodes();
+                                for (int k = 0; k < loopList2.getLength(); k++) {
+                                    if (loopList2.item(k).getNodeType() == Node.ELEMENT_NODE) {
+                                        Element e = (Element) loopList2.item(k);
+                                        switch (e.getTagName()) {
+                                            case "x":
+                                                x = Integer.parseInt(e.getTextContent());
+                                                break;
+                                            case "y":
+                                                y = Integer.parseInt(e.getTextContent());
+                                                break;
+                                            case "channel":
+                                                channel = Integer.parseInt(e.getTextContent());
+                                                break;
+                                        }
+                                    }
+                                }
+                                RecordArmButton ui = new RecordArmButton(x, y, channel);
+                            }
+                        }
+
+                        loopList = uiElements.getElementsByTagName("fader");
+                        for (int j = 0; j < loopList.getLength(); j++) { //Loop through all <fader> XML elements.
+                            /*
+                            Variables must be initialized to make the mute button - cannot be null. UIElement
+                            checks these values before adding the UIElement to the ArrayList of elements.
+                            */
+                            int x = -1000;
+                            int y = -1000;
+                            int channel = 0;
+
+                            if (loopList.item(j).getNodeType() == Node.ELEMENT_NODE) {
+                                Element uiXMLElement = (Element) loopList.item(j);
+                                NodeList loopList2 = uiXMLElement.getChildNodes();
+                                for (int k = 0; k < loopList2.getLength(); k++) {
+                                    if (loopList2.item(k).getNodeType() == Node.ELEMENT_NODE) {
+                                        Element e = (Element) loopList2.item(k);
+                                        switch (e.getTagName()) {
+                                            case "x":
+                                                x = Integer.parseInt(e.getTextContent());
+                                                break;
+                                            case "y":
+                                                y = Integer.parseInt(e.getTextContent());
+                                                break;
+                                            case "channel":
+                                                channel = Integer.parseInt(e.getTextContent());
+                                                break;
+                                        }
+                                    }
+                                }
+                                Fader ui = new Fader(x, y, channel);
+                            }
+                        }
+
+                        loopList = uiElements.getElementsByTagName("pan");
+                        for (int j = 0; j < loopList.getLength(); j++) { //Loop through all <pan> XML elements.
+                            /*
+                            Variables must be initialized to make the mute button - cannot be null. UIElement
+                            checks these values before adding the UIElement to the ArrayList of elements.
+                            */
+                            int x = -1000;
+                            int y = -1000;
+                            int channel = 0;
+
+                            if (loopList.item(j).getNodeType() == Node.ELEMENT_NODE) {
+                                Element uiXMLElement = (Element) loopList.item(j);
+                                NodeList loopList2 = uiXMLElement.getChildNodes();
+                                for (int k = 0; k < loopList2.getLength(); k++) {
+                                    if (loopList2.item(k).getNodeType() == Node.ELEMENT_NODE) {
+                                        Element e = (Element) loopList2.item(k);
+                                        switch (e.getTagName()) {
+                                            case "x":
+                                                x = Integer.parseInt(e.getTextContent());
+                                                break;
+                                            case "y":
+                                                y = Integer.parseInt(e.getTextContent());
+                                                break;
+                                            case "channel":
+                                                channel = Integer.parseInt(e.getTextContent());
+                                                break;
+                                        }
+                                    }
+                                }
+                                Pan ui = new Pan(x, y, channel);
+                            }
+                        }
+
+                        loopList = uiElements.getElementsByTagName("timecode");
+                        for (int j = 0; j < loopList.getLength(); j++) { //Loop through all <time> XML elements.
+                            /*
+                            Variables must be initialized to make the mute button - cannot be null. UIElement
+                            checks these values before adding the UIElement to the ArrayList of elements.
+                            */
+                            int x = -1000;
+                            int y = -1000;
+
+                            if (loopList.item(j).getNodeType() == Node.ELEMENT_NODE) {
+                                Element uiXMLElement = (Element) loopList.item(j);
+                                NodeList loopList2 = uiXMLElement.getChildNodes();
+                                for (int k = 0; k < loopList2.getLength(); k++) {
+                                    if (loopList2.item(k).getNodeType() == Node.ELEMENT_NODE) {
+                                        Element e = (Element) loopList2.item(k);
+                                        switch (e.getTagName()) {
+                                            case "x":
+                                                x = Integer.parseInt(e.getTextContent());
+                                                break;
+                                            case "y":
+                                                y = Integer.parseInt(e.getTextContent());
+                                                break;
+                                        }
+                                    }
+                                }
+                                Timecode ui = new Timecode(x, y);
+                            }
+                        }
+
+                        loopList = uiElements.getElementsByTagName("play");
+                        for (int j = 0; j < loopList.getLength(); j++) { //Loop through all <play> XML elements.
+                            /*
+                            Variables must be initialized to make the mute button - cannot be null. UIElement
+                            checks these values before adding the UIElement to the ArrayList of elements.
+                            */
+                            int x = -1000;
+                            int y = -1000;
+
+                            if (loopList.item(j).getNodeType() == Node.ELEMENT_NODE) {
+                                Element uiXMLElement = (Element) loopList.item(j);
+                                NodeList loopList2 = uiXMLElement.getChildNodes();
+                                for (int k = 0; k < loopList2.getLength(); k++) {
+                                    if (loopList2.item(k).getNodeType() == Node.ELEMENT_NODE) {
+                                        Element e = (Element) loopList2.item(k);
+                                        switch (e.getTagName()) {
+                                            case "x":
+                                                x = Integer.parseInt(e.getTextContent());
+                                                break;
+                                            case "y":
+                                                y = Integer.parseInt(e.getTextContent());
+                                                break;
+                                        }
+                                    }
+                                }
+                                TransportButton ui = new TransportButton(x, y, TransportButtonType.PLAY);
+                            }
+                        }
+
+                        loopList = uiElements.getElementsByTagName("click");
+                        for (int j = 0; j < loopList.getLength(); j++) { //Loop through all <click> XML elements.
+                            /*
+                            Variables must be initialized to make the mute button - cannot be null. UIElement
+                            checks these values before adding the UIElement to the ArrayList of elements.
+                            */
+                            int x = -1000;
+                            int y = -1000;
+
+                            if (loopList.item(j).getNodeType() == Node.ELEMENT_NODE) {
+                                Element uiXMLElement = (Element) loopList.item(j);
+                                NodeList loopList2 = uiXMLElement.getChildNodes();
+                                for (int k = 0; k < loopList2.getLength(); k++) {
+                                    if (loopList2.item(k).getNodeType() == Node.ELEMENT_NODE) {
+                                        Element e = (Element) loopList2.item(k);
+                                        switch (e.getTagName()) {
+                                            case "x":
+                                                x = Integer.parseInt(e.getTextContent());
+                                                break;
+                                            case "y":
+                                                y = Integer.parseInt(e.getTextContent());
+                                                break;
+                                        }
+                                    }
+                                }
+                                TransportButton ui = new TransportButton(x, y, TransportButtonType.CLICK);
+                            }
+                        }
+
+                        loopList = uiElements.getElementsByTagName("loop");
+                        for (int j = 0; j < loopList.getLength(); j++) { //Loop through all <loop> XML elements.
+                            /*
+                            Variables must be initialized to make the mute button - cannot be null. UIElement
+                            checks these values before adding the UIElement to the ArrayList of elements.
+                            */
+                            int x = -1000;
+                            int y = -1000;
+
+                            if (loopList.item(j).getNodeType() == Node.ELEMENT_NODE) {
+                                Element uiXMLElement = (Element) loopList.item(j);
+                                NodeList loopList2 = uiXMLElement.getChildNodes();
+                                for (int k = 0; k < loopList2.getLength(); k++) {
+                                    if (loopList2.item(k).getNodeType() == Node.ELEMENT_NODE) {
+                                        Element e = (Element) loopList2.item(k);
+                                        switch (e.getTagName()) {
+                                            case "x":
+                                                x = Integer.parseInt(e.getTextContent());
+                                                break;
+                                            case "y":
+                                                y = Integer.parseInt(e.getTextContent());
+                                                break;
+                                        }
+                                    }
+                                }
+                                TransportButton ui = new TransportButton(x, y, TransportButtonType.LOOP);
+                            }
+                        }
+                    }
+                }
+                System.out.println("There are " + elementList.getLength() + " elements saved in this layout.");
+
+            } catch (ParserConfigurationException e) {
+                e.printStackTrace();
+                alert("File loading failed!");
+            } catch (SAXException e) {
+                e.printStackTrace();
+                alert("File loading failed!");
+            } catch (IOException e) {
+                e.printStackTrace();
+                alert("File loading failed!");
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+                alert("File loading failed!");
+            }
+        }
+        reloadData();
+    }
+    /*
+    Saves X and Y data for an element into XML.
+    Adapted from: https://stackoverflow.com/questions/7373567/how-to-read-and-write-xml-files
+    */
+
+    private Element createXYData(Element uiXmlElement, UIElement uiElement, Document doc) {
+        Element e;
+
+        e = doc.createElement("x");
+        e.appendChild(doc.createTextNode(uiElement.getX() + ""));
+        uiXmlElement.appendChild(e);
+
+        e = doc.createElement("y");
+        e.appendChild(doc.createTextNode(uiElement.getY() + ""));
+        uiXmlElement.appendChild(e);
+
+        return uiXmlElement;
+    }
+
+    private void alert(String message) {
+        //Code for message box from: https://processing.org/discourse/beta/num_1262441938.html
+        JOptionPane.showMessageDialog(null, message);
     }
 
     public static OSCControl getApp() {

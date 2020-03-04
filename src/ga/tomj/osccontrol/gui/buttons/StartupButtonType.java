@@ -13,7 +13,7 @@ public enum StartupButtonType {
         }
     }, LOAD_LAYOUT("Load Layout", new Color(128,128,128), 0) {
         public void mousePressed() {
-            //TODO Implement loading layouts.
+            app.loadLayout();
         }
     }, SETTINGS("Settings", new Color(128,128,128), 50) {
         public void mousePressed() {
