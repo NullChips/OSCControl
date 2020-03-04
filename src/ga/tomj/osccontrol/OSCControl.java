@@ -1,7 +1,7 @@
 package ga.tomj.osccontrol;
 
-import ga.tomj.osccontrol.gui.*;
 import ga.tomj.osccontrol.gui.UIManager;
+import ga.tomj.osccontrol.gui.*;
 import ga.tomj.osccontrol.gui.buttons.*;
 import netP5.NetAddress;
 import org.w3c.dom.Document;
@@ -392,6 +392,7 @@ public class OSCControl extends PApplet {
     public void saveLayout() {
         selectOutput("Save As:", "saveFileSelected");
     }
+
     public void loadLayout() {
         System.out.println("got here");
         selectInput("Open Layout:", "openFileSelected");
@@ -423,7 +424,11 @@ public class OSCControl extends PApplet {
                 settings.appendChild(e);
 
                 e = doc.createElement("size_y");
-                e.appendChild(doc.createTextNode(height + ""));
+                if (UIManager.getMgr().isEditMode()) {
+                    e.appendChild(doc.createTextNode((height - 200) + ""));
+                } else {
+                    e.appendChild(doc.createTextNode(height + ""));
+                }
                 settings.appendChild(e);
 
                 root.appendChild(settings);
@@ -532,12 +537,18 @@ public class OSCControl extends PApplet {
             }
         }
     }
+
     public void openFileSelected(File openFile) {
         if (openFile != null) {
             if (!openFile.getPath().endsWith(".oscl")) { //Check if the file is a .oscl file.
                 alert("Please select a valid .oscl file.");
                 return;
             }
+            boolean isEditMode = UIManager.getMgr().isEditMode();
+            UIManager.getMgr().getElements().clear();
+            UIManager.getMgr().setEditMode(false);
+            UIManager.getMgr().setDeleteMode(false);
+            surface.setResizable(true);
             mode = AppMode.RUN;
             ModeButton mo = new ModeButton(85, 25);
 
@@ -551,14 +562,40 @@ public class OSCControl extends PApplet {
                 Element root = doc.getDocumentElement();
                 NodeList settings = doc.getElementsByTagName("settings");
 
-                if(settings == null) {
+                if (settings == null) {
                     System.out.println("settings is null wtf");
                     return;
                 }
 
+                int sizeX = 200;
+                int sizeY = 200;
+
+                NodeList settingsList = root.getElementsByTagName("settings");
+                for (int i = 0; i < settingsList.getLength(); i++) {
+                    if (settingsList.item(i).getNodeType() == Node.ELEMENT_NODE) {
+                        Element settingsElements = (Element) settingsList.item(i);
+                        NodeList settingsList2 = settingsElements.getChildNodes();
+                        for (int j = 0; j < settingsList2.getLength(); j++) {
+                            if (settingsList2.item(j).getNodeType() == Node.ELEMENT_NODE) {
+                                Element e = (Element) settingsList2.item(j);
+                                switch (e.getTagName()) {
+                                    case "size_x":
+                                        sizeX = Integer.parseInt(e.getTextContent());
+                                        break;
+                                    case "size_y":
+                                        sizeY = Integer.parseInt(e.getTextContent());
+                                        break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                surface.setSize(sizeX, sizeY);
+
                 NodeList elementList = root.getElementsByTagName("elements");
                 for (int i = 0; i < elementList.getLength(); i++) {
-                    if(elementList.item(i).getNodeType() == Node.ELEMENT_NODE) {
+                    if (elementList.item(i).getNodeType() == Node.ELEMENT_NODE) {
                         Element uiElements = (Element) elementList.item(i);
                         NodeList loopList;
 
@@ -568,15 +605,15 @@ public class OSCControl extends PApplet {
                             Variables must be initialized to make the mute button - cannot be null. UIElement
                             checks these values before adding the UIElement to the ArrayList of elements.
                             */
-                            int x= -1000;
+                            int x = -1000;
                             int y = -1000;
                             int channel = 0;
 
-                            if(loopList.item(j).getNodeType() == Node.ELEMENT_NODE) {
+                            if (loopList.item(j).getNodeType() == Node.ELEMENT_NODE) {
                                 Element uiXMLElement = (Element) loopList.item(j);
                                 NodeList loopList2 = uiXMLElement.getChildNodes();
                                 for (int k = 0; k < loopList2.getLength(); k++) {
-                                    if(loopList2.item(k).getNodeType() == Node.ELEMENT_NODE) {
+                                    if (loopList2.item(k).getNodeType() == Node.ELEMENT_NODE) {
                                         Element e = (Element) loopList2.item(k);
                                         switch (e.getTagName()) {
                                             case "x":

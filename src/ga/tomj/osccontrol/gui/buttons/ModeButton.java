@@ -46,7 +46,7 @@ public class ModeButton extends Button {
         }
     }
 
-    private void drawEditButtons() {
+    public void drawEditButtons() {
         int height = app.height - 200;
         Color lineCol = new Color(64, 64, 64);
         Line l1 = new Line(0, height, app.width, height, lineCol);
