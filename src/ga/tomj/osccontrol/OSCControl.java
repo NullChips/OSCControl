@@ -72,13 +72,11 @@ public class OSCControl extends PApplet {
         frameRate(60); //Decrease framerate to decrease processing load.
 
         app = this;
-        mode = AppMode.STARTUP;
+        mode = AppMode.STARTUP; //Set the app mode on startup.
 
-        drawStartupScreen();
-//        drawTestLayout();
+        drawStartupScreen(); //Draw the startup elements.
 
-        doubleClickCounter = 0;
-        reloadData();
+        doubleClickCounter = 0; //Set double click counter, ready to receive double clicks.
     }
 
     //This method is repeatedly run throughout the programs life.
@@ -96,6 +94,7 @@ public class OSCControl extends PApplet {
                 }
             }
 
+            //If the element is not from the current mode, remove it (garbage collection, saves on CPU and memory resources).
             if (e.getMode() == mode) {
                 e.render();
                 if (e instanceof StartupButton) {
@@ -103,26 +102,27 @@ public class OSCControl extends PApplet {
                     sb.updateCoordinates();
                 }
             } else {
-                UIManager.getMgr().getElements().remove(e); //If the element is not from the current mode, remove it (saves on CPU power).
+                UIManager.getMgr().getElements().remove(e);
             }
         }
         if (isDoubleClick) {
             if (doubleClickCounter < 30) {
-                doubleClickCounter++;
+                doubleClickCounter++; //Increase counter for double click if below certain value.
             } else {
-                isDoubleClick = false;
+                isDoubleClick = false; //If counter is now too high for a double click, stop counting.
             }
         }
     }
 
     public void mousePressed() {
-        if (isDoubleClick) {
+        if (isDoubleClick) { //If double click, run double click method for all elements.
             for (UIElement e : UIManager.getMgr().getElements()) {
                 if (mode == e.getMode()) {
                     e.doubleClick();
+                    e.checkAndDelete(); //Checks if app is in delete mode, and if so, deletes the element.
                 }
             }
-        } else {
+        } else { //Otherwise, run the normal mouse pressed method, then start counting for a double click.
             for (UIElement e : UIManager.getMgr().getElements()) {
                 if (mode == e.getMode()) {
                     e.mousePressed();
@@ -131,10 +131,10 @@ public class OSCControl extends PApplet {
             }
             isDoubleClick = true;
         }
-        doubleClickCounter = 0;
+        doubleClickCounter = 0; //Reset counter.
     }
 
-    public void mouseDragged() {
+    public void mouseDragged() { //When mouse dragged, run the mouseDragged method for all elements.
         for (UIElement e : UIManager.getMgr().getElements()) {
             if (mode == e.getMode()) {
                 e.mouseDragged();
@@ -143,35 +143,41 @@ public class OSCControl extends PApplet {
     }
 
     public void mouseReleased() {
-        cursor();
-        UIManager.getMgr().setElementDragged(null);
+        cursor(); //Show cursor (cursor is hidden when using a pan).
+        UIManager.getMgr().setElementDragged(null); //No element is being dragged anymore.
     }
 
     public void keyPressed() {
         if (key != CODED) {
             for (UIElement e : UIManager.getMgr().getElements()) {
-                e.keyPressed(key);
+                e.keyPressed(key); //Send the key to each element and run their keyPressed methods.
             }
         }
     }
 
-    //This method establishes the connection to reaper.
+    //This method establishes the connection to Reaper.
     public void connectOSC(String ip, int receivePort, int sendPort) {
         this.ip = ip;
         this.sendPort = sendPort;
         this.receivePort = receivePort;
-        this.previousSendPortEntry = sendPort + "";
-        this.previousReceivePortEntry = receivePort + "";
+        this.previousSendPortEntry = sendPort + ""; //These two variables are used in the settings window to keep the value
+        this.previousReceivePortEntry = receivePort + ""; //that has been typed in if it is not a valid number.
 
-        reaperAddr = new NetAddress(ip, receivePort);
-        oscp5 = new OscP5(this, sendPort);
+        reaperAddr = new NetAddress(ip, receivePort); //Address used to packets (received by Reaper).
+        oscp5 = new OscP5(this, sendPort); //OscP5 object used to send messages.
     }
 
+    /*
+    This method establishes the connection to Reaper when a new IP and port have been entered in the settings Window.
+    If the numbers entered are actually numbers, it returns true. Otherwise, return false.
+    */
     public boolean connectOSC() {
+        //Set strings for settings window to current IP and port values.
         previousReceivePortEntry = receivePortTextBox.getText();
         previousSendPortEntry = sendPortTextBox.getText();
         ip = ipTextBox.getText();
 
+        //Check if the ports are numbers.
         try {
             receivePort = Integer.parseInt(previousReceivePortEntry);
         } catch (NumberFormatException e) {
@@ -186,54 +192,58 @@ public class OSCControl extends PApplet {
             return false;
         }
 
+        //Reconnect using the new IP and ports.
         reaperAddr = new NetAddress(ip, receivePort);
         oscp5 = new OscP5(this, sendPort);
         return true;
     }
 
     public void reloadData() {
+        //Loop through all elements and find the one with the highest channel number.
         for (UIElement e : UIManager.getMgr().getElements()) {
             if (e instanceof MuteButton) {
                 MuteButton m = (MuteButton) e;
                 //This line uses an ? operator to check if the channel number of this element is greater than the current
                 //number of max channels. If it is, it sets the max channels to this elements channel number.
                 maxChannels = (m.getChannelNumber() > maxChannels) ? m.getChannelNumber() : maxChannels;
-            }
-
-            if (e instanceof SoloButton) {
+            } else if (e instanceof SoloButton) {
                 SoloButton s = (SoloButton) e;
                 maxChannels = (s.getChannelNumber() > maxChannels) ? s.getChannelNumber() : maxChannels;
-            }
-
-            if (e instanceof RecordArmButton) {
+            } else if (e instanceof RecordArmButton) {
                 RecordArmButton r = (RecordArmButton) e;
                 maxChannels = (r.getChannelNumber() > maxChannels) ? r.getChannelNumber() : maxChannels;
-            }
-
-            if (e instanceof Fader) {
+            } else if (e instanceof Fader) {
                 Fader f = (Fader) e;
                 maxChannels = (f.getChannelNumber() > maxChannels) ? f.getChannelNumber() : maxChannels;
-            }
-
-            if (e instanceof Pan) {
+            } else if (e instanceof Pan) {
                 Pan p = (Pan) e;
                 maxChannels = (p.getChannelNumber() > maxChannels) ? p.getChannelNumber() : maxChannels;
             }
         }
 
+        //Tell Repear we want info about this amount of channels.
         oscp5.send(new OscMessage("/device/track/count").add(maxChannels), reaperAddr);
-        oscp5.send(new OscMessage("/action/41743"), reaperAddr);
+        oscp5.send(new OscMessage("/action/41743"), reaperAddr); //Request all data Reaper has.
 
     }
 
+    //Adapted from OSC Tutorial by Kit Lane & Bruce Wiggins.
     public void oscEvent(OscMessage message) {
         if (mode == AppMode.RUN) {
             String messageString = message.addrPattern();
             String[] splitMessage = split(messageString, "/"); //Split the message into its separate parts.
 
+            //Print information each time a message is received.
             print("### Received an osc message.");
             println(" addrpattern: " + messageString + "   Typetag: " + message.typetag() + "   Length: " + splitMessage.length);
 
+
+            /*
+            Each of the if statements below checks if the message recieved has a certain address.
+            Once this condition is satisfied, then it will update the elements related to this message accordingly. This
+            is used to prevent the use of elements that do not currently have a channel in Reaper - Reaper will not send
+            a message in response. Not all if statements are commented, as some are near duplicates of previous statements.
+             */
             if (splitMessage.length == 3 && splitMessage[1].equals("time") &&
                     splitMessage[2].equals("str")) {
                 Timecode.setTc(message.get(0).stringValue());
@@ -246,14 +256,15 @@ public class OSCControl extends PApplet {
                     MuteButton m = (MuteButton) e; //Create a new MuteButton object from the UIElement object.
                     int channel = parseInt(splitMessage[2]);
                     if (m.getChannelNumber() == channel) {
+                        //If the value of the float is 1, set the button to be pressed, else set to be not pressed.
                         m.setPressed(message.get(0).floatValue() == 1.0F);
                     }
                 }
 
                 if (e instanceof SoloButton && splitMessage.length > 4 && splitMessage[1].equals("track") &&
-                        splitMessage[3].equals("solo")) { //Checks the message is of the right length and is a track solo message.
+                        splitMessage[3].equals("solo")) {
 
-                    SoloButton s = (SoloButton) e; //Create a new SoloButton object from the UIElement object.
+                    SoloButton s = (SoloButton) e;
                     int channel = parseInt(splitMessage[2]);
                     if (s.getChannelNumber() == channel) {
                         s.setPressed(message.get(0).floatValue() == 1.0F);
@@ -261,9 +272,9 @@ public class OSCControl extends PApplet {
                 }
 
                 if (e instanceof RecordArmButton && splitMessage.length > 4 && splitMessage[1].equals("track") &&
-                        splitMessage[3].equals("recarm")) { //Checks the message is of the right length and is a track solo message.
+                        splitMessage[3].equals("recarm")) {
 
-                    RecordArmButton r = (RecordArmButton) e; //Create a new RecordArmButton object from the UIElement object.
+                    RecordArmButton r = (RecordArmButton) e;
                     int channel = parseInt(splitMessage[2]);
                     if (r.getChannelNumber() == channel) {
                         r.setPressed(message.get(0).floatValue() == 1.0F);
@@ -275,6 +286,7 @@ public class OSCControl extends PApplet {
                     Fader f = (Fader) e;
                     int channel = parseInt(splitMessage[2]);
                     if (f.getChannelNumber() == channel) {
+                        //Fader values are sent from 0.0 to 1.0 from Reaper, so multiply this by 100 to set the percent.
                         f.setFaderPercent((int) (message.get(0).floatValue() * 100));
                     }
                 }
@@ -284,6 +296,7 @@ public class OSCControl extends PApplet {
                     Fader f = (Fader) e;
                     int channel = parseInt(splitMessage[2]);
                     if (f.getChannelNumber() == channel && splitMessage[4].equals("L")) {
+                        //VU values are sent from 0.0 to 1.0 from Reaper, so multiply this by 100 to set the VU percent.
                         f.setVuL((int) (message.get(0).floatValue() * 100));
                     } else if (f.getChannelNumber() == channel && splitMessage[4].equals("R")) {
                         f.setVuR((int) (message.get(0).floatValue() * 100));
@@ -294,7 +307,9 @@ public class OSCControl extends PApplet {
                         splitMessage[3].equals("name")) {
                     Fader f = (Fader) e;
                     int channel = parseInt(splitMessage[2]);
-                    if (f.getChannelNumber() == channel) f.setTrackName(message.get(0).stringValue());
+                    if (f.getChannelNumber() == channel) {
+                        f.setTrackName(message.get(0).stringValue());
+                    }
                 }
 
                 if (e instanceof Pan && splitMessage.length == 4 && splitMessage[1].equals("track") &&
@@ -302,6 +317,7 @@ public class OSCControl extends PApplet {
                     Pan p = (Pan) e;
                     int channel = parseInt(splitMessage[2]);
                     if (p.getChannelNumber() == channel) {
+                        //Pan values are sent from 0.0 to 1.0 from Reaper, so multiply this by 100 to set the pan percent.
                         float f = message.get(0).floatValue() * 100;
                         p.setPercent((int) f);
                     }
@@ -309,23 +325,27 @@ public class OSCControl extends PApplet {
 
                 if (e instanceof TransportButton) {
                     TransportButton tb = (TransportButton) e;
-                    if (tb.getTransportButtonType() == TransportButtonType.CLICK && splitMessage.length == 2 && splitMessage[1].equals("click"))
-                        tb.setPressed(message.get(0).floatValue() == 1.0F);
+                    //If the float value returns a 1.0, set the relevant transport button to be pressed.
 
-                    if (tb.getTransportButtonType() == TransportButtonType.PLAY && splitMessage.length == 2 && splitMessage[1].equals("play"))
+                    if (tb.getTransportButtonType() == TransportButtonType.CLICK && splitMessage.length == 2 && splitMessage[1].equals("click")) {
                         tb.setPressed(message.get(0).floatValue() == 1.0F);
-
-                    if (tb.getTransportButtonType() == TransportButtonType.LOOP && splitMessage.length == 2 && splitMessage[1].equals("repeat"))
+                    } else if (tb.getTransportButtonType() == TransportButtonType.PLAY && splitMessage.length == 2 && splitMessage[1].equals("play")) {
                         tb.setPressed(message.get(0).floatValue() == 1.0F);
+                    } else if (tb.getTransportButtonType() == TransportButtonType.LOOP && splitMessage.length == 2 && splitMessage[1].equals("repeat")) {
+                        tb.setPressed(message.get(0).floatValue() == 1.0F);
+                    }
                 }
             }
         }
+
     }
 
+    //Draw the elements for the startup screen.
     public void drawStartupScreen() {
         UIManager.getMgr().getElements().clear();
         mode = AppMode.STARTUP;
 
+        //Garbage collect textboxes from settings screen.
         ipTextBox = null;
         receivePortTextBox = null;
         sendPortTextBox = null;
@@ -338,6 +358,7 @@ public class OSCControl extends PApplet {
 
     }
 
+    //Draw elements for test layout used whilst program was in development.
     public void drawTestLayout() {
         for (int i = 0; i < 16; i++) {
             int x = (50 * (i + 1)) - 15;
@@ -355,6 +376,7 @@ public class OSCControl extends PApplet {
         reloadData();
     }
 
+    //Global variables for the settings screen.
     private TextBox ipTextBox;
     private TextBox receivePortTextBox;
 
@@ -363,6 +385,7 @@ public class OSCControl extends PApplet {
 
     private String previousSendPortEntry;
 
+    //Draw the elements for the settings screen.
     public void drawSettingsScreen() {
         UIManager.getMgr().getElements().clear();
 
@@ -390,6 +413,10 @@ public class OSCControl extends PApplet {
         SaveSettingsButton ssb = new SaveSettingsButton(width / 2, (height / 2) + 100);
     }
 
+    /*
+    Save as and open dialog boxes adapted from Processing reference: https://www.processing.org/reference/selectInput_.html
+    and https://www.processing.org/reference/selectOutput_.html
+     */
     public void saveLayout() {
         selectOutput("Save As:", "saveFileSelected");
     }
@@ -397,55 +424,57 @@ public class OSCControl extends PApplet {
     public void loadLayout() {
         selectInput("Open Layout:", "openFileSelected");
     }
-    /*XML saving method. Adapted from: https://stackoverflow.com/questions/7373567/how-to-read-and-write-xml-files*/
 
-
+    //XML saving method. Adapted from: https://stackoverflow.com/questions/7373567/how-to-read-and-write-xml-files
     public void saveFileSelected(File saveFile) {
-        if (saveFile != null) {
+        if (saveFile != null) { //If the save location exists - save dialog wasn't exited or closed.
             String path = saveFile.getPath();
-            if (!path.endsWith(".oscl")) {
+            if (!path.endsWith(".oscl")) { //See if user entered the file extension. If not, add it.
                 path += ".oscl";
             }
-
-            System.out.println("Directory: " + path);
 
             Document doc;
             Element e;
 
             try {
-                DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-                DocumentBuilder db = dbf.newDocumentBuilder();
-                doc = db.newDocument();
-                Element root = doc.createElement("layout");
 
-                Element settings = doc.createElement("settings");
+                //Use DBF to create a new DocumentBuilder. Use this DB to create the new XML document.
+                DocumentBuilder db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+                doc = db.newDocument();
+                Element root = doc.createElement("layout"); //Create the root XML element.
+
+                Element settings = doc.createElement("settings"); //Create the settings element.
                 e = doc.createElement("size_x");
                 e.appendChild(doc.createTextNode(width + ""));
                 settings.appendChild(e);
 
                 e = doc.createElement("size_y");
+                //If the app is in edit mode, then discount the height that is added onto the window by this.
                 if (UIManager.getMgr().isEditMode()) {
                     e.appendChild(doc.createTextNode((height - 200) + ""));
                 } else {
                     e.appendChild(doc.createTextNode(height + ""));
                 }
                 settings.appendChild(e);
-
                 root.appendChild(settings);
 
+                /*
+                Loop through every savable UI element and create the XML elements for that. Code is near identical for each,
+                so only one is commented.
+                 */
                 Element uiElements = doc.createElement("elements");
                 for (UIElement uiElement : UIManager.getMgr().getElements()) {
                     if (uiElement instanceof SoloButton) {
                         SoloButton uie = (SoloButton) uiElement;
                         Element uiXmlElement = doc.createElement("solo");
 
-                        uiXmlElement = createXYData(uiXmlElement, uie, doc);
+                        uiXmlElement = createXYData(uiXmlElement, uie, doc); //Save X and Y elements.
 
                         e = doc.createElement("channel");
-                        e.appendChild(doc.createTextNode(uie.getChannelNumber() + ""));
+                        e.appendChild(doc.createTextNode(uie.getChannelNumber() + "")); //Save channel element.
                         uiXmlElement.appendChild(e);
 
-                        uiElements.appendChild(uiXmlElement);
+                        uiElements.appendChild(uiXmlElement); //Add the UIElement just parsed to the master XML element.
                     }
 
                     if (uiElement instanceof MuteButton) {
@@ -516,12 +545,13 @@ public class OSCControl extends PApplet {
                     }
                 }
 
-                root.appendChild(uiElements);
-                doc.appendChild(root);
+                root.appendChild(uiElements); //Add all UI XML elements to the root element of the XML file.
+                doc.appendChild(root); //Add the finished root element to the document.
 
-                Transformer tr = TransformerFactory.newInstance().newTransformer();
+                Transformer tr = TransformerFactory.newInstance().newTransformer(); //Transform the doc to XML and save.
                 tr.transform(new DOMSource(doc), new StreamResult(new FileOutputStream(path)));
 
+            //If saving fails for any reason, print the stacktrace and alert the user.
             } catch (ParserConfigurationException ex) {
                 ex.printStackTrace();
                 alert("File saving failed!");
@@ -539,12 +569,12 @@ public class OSCControl extends PApplet {
     }
 
     public void openFileSelected(File openFile) {
-        if (openFile != null) {
-            if (!openFile.getPath().endsWith(".oscl")) { //Check if the file is a .oscl file.
+        if (openFile != null) { //If the file exists.
+            if (!openFile.getPath().endsWith(".oscl")) { //Check if the file is a .oscl filetype.
                 alert("Please select a valid .oscl file.");
                 return;
             }
-            boolean isEditMode = UIManager.getMgr().isEditMode();
+            //Remove all elements currently in the window to load in the new layout. Then, configure the window.
             UIManager.getMgr().getElements().clear();
             UIManager.getMgr().setEditMode(false);
             UIManager.getMgr().setDeleteMode(false);
@@ -553,27 +583,32 @@ public class OSCControl extends PApplet {
             ModeButton mo = new ModeButton(85, 25);
 
             Document doc;
-            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-
             try {
-                DocumentBuilder db = dbf.newDocumentBuilder();
+                //DBF creates new DocumentBuilder. DB is then used to parse the file which has been selected.
+                DocumentBuilder db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
                 doc = db.parse(openFile);
 
+                //Find the root element.
                 Element root = doc.getDocumentElement();
                 NodeList settings = doc.getElementsByTagName("settings");
 
-                int sizeX = 200;
-                int sizeY = 200;
-
+                //Default values if size values are not found.
+                int sizeX = 1050;
+                int sizeY = 650;
+                /*
+                Each type of element is returned as a NodeList object for all occurrences in the chosen element. These
+                are looped through to find the relevant info. Each level of elements must be looped through as a direct
+                path cannot be taken to find the relevant info.
+                 */
                 NodeList settingsList = root.getElementsByTagName("settings");
                 for (int i = 0; i < settingsList.getLength(); i++) {
-                    if (settingsList.item(i).getNodeType() == Node.ELEMENT_NODE) {
+                    if (settingsList.item(i).getNodeType() == Node.ELEMENT_NODE) { //If the node is a XML element.
                         Element settingsElements = (Element) settingsList.item(i);
                         NodeList settingsList2 = settingsElements.getChildNodes();
                         for (int j = 0; j < settingsList2.getLength(); j++) {
                             if (settingsList2.item(j).getNodeType() == Node.ELEMENT_NODE) {
                                 Element e = (Element) settingsList2.item(j);
-                                switch (e.getTagName()) {
+                                switch (e.getTagName()) { //Find saved width and height of the window.
                                     case "size_x":
                                         sizeX = Integer.parseInt(e.getTextContent());
                                         break;
@@ -585,10 +620,9 @@ public class OSCControl extends PApplet {
                         }
                     }
                 }
+                surface.setSize(sizeX, sizeY); //Set the size of the window to the values found.
 
-                surface.setSize(sizeX, sizeY);
-
-                NodeList elementList = root.getElementsByTagName("elements");
+                NodeList elementList = root.getElementsByTagName("elements"); //List of all UI elements saved.
                 for (int i = 0; i < elementList.getLength(); i++) {
                     if (elementList.item(i).getNodeType() == Node.ELEMENT_NODE) {
                         Element uiElements = (Element) elementList.item(i);
@@ -597,7 +631,7 @@ public class OSCControl extends PApplet {
                         loopList = uiElements.getElementsByTagName("mute");
                         for (int j = 0; j < loopList.getLength(); j++) { //Loop through all <mute> XML elements.
                             /*
-                            Variables must be initialized to make the mute button - cannot be null. UIElement
+                            Variables must be initialized to make the UI element - cannot be null. UIElement
                             checks these values before adding the UIElement to the ArrayList of elements.
                             */
                             int x = -1000;
@@ -630,7 +664,7 @@ public class OSCControl extends PApplet {
                         loopList = uiElements.getElementsByTagName("solo");
                         for (int j = 0; j < loopList.getLength(); j++) { //Loop through all <solo> XML elements.
                             /*
-                            Variables must be initialized to make the mute button - cannot be null. UIElement
+                            Variables must be initialized to make the UI element - cannot be null. UIElement
                             checks these values before adding the UIElement to the ArrayList of elements.
                             */
                             int x = -1000;
@@ -663,7 +697,7 @@ public class OSCControl extends PApplet {
                         loopList = uiElements.getElementsByTagName("record_arm");
                         for (int j = 0; j < loopList.getLength(); j++) { //Loop through all <record_arm> XML elements.
                             /*
-                            Variables must be initialized to make the mute button - cannot be null. UIElement
+                            Variables must be initialized to make the UI element - cannot be null. UIElement
                             checks these values before adding the UIElement to the ArrayList of elements.
                             */
                             int x = -1000;
@@ -696,7 +730,7 @@ public class OSCControl extends PApplet {
                         loopList = uiElements.getElementsByTagName("fader");
                         for (int j = 0; j < loopList.getLength(); j++) { //Loop through all <fader> XML elements.
                             /*
-                            Variables must be initialized to make the mute button - cannot be null. UIElement
+                            Variables must be initialized to make the UI element - cannot be null. UIElement
                             checks these values before adding the UIElement to the ArrayList of elements.
                             */
                             int x = -1000;
@@ -729,7 +763,7 @@ public class OSCControl extends PApplet {
                         loopList = uiElements.getElementsByTagName("pan");
                         for (int j = 0; j < loopList.getLength(); j++) { //Loop through all <pan> XML elements.
                             /*
-                            Variables must be initialized to make the mute button - cannot be null. UIElement
+                            Variables must be initialized to make the UI element - cannot be null. UIElement
                             checks these values before adding the UIElement to the ArrayList of elements.
                             */
                             int x = -1000;
@@ -762,7 +796,7 @@ public class OSCControl extends PApplet {
                         loopList = uiElements.getElementsByTagName("timecode");
                         for (int j = 0; j < loopList.getLength(); j++) { //Loop through all <time> XML elements.
                             /*
-                            Variables must be initialized to make the mute button - cannot be null. UIElement
+                            Variables must be initialized to make the UI element - cannot be null. UIElement
                             checks these values before adding the UIElement to the ArrayList of elements.
                             */
                             int x = -1000;
@@ -791,7 +825,7 @@ public class OSCControl extends PApplet {
                         loopList = uiElements.getElementsByTagName("play");
                         for (int j = 0; j < loopList.getLength(); j++) { //Loop through all <play> XML elements.
                             /*
-                            Variables must be initialized to make the mute button - cannot be null. UIElement
+                            Variables must be initialized to make the UI element - cannot be null. UIElement
                             checks these values before adding the UIElement to the ArrayList of elements.
                             */
                             int x = -1000;
@@ -820,7 +854,7 @@ public class OSCControl extends PApplet {
                         loopList = uiElements.getElementsByTagName("click");
                         for (int j = 0; j < loopList.getLength(); j++) { //Loop through all <click> XML elements.
                             /*
-                            Variables must be initialized to make the mute button - cannot be null. UIElement
+                            Variables must be initialized to make the UI element - cannot be null. UIElement
                             checks these values before adding the UIElement to the ArrayList of elements.
                             */
                             int x = -1000;
@@ -849,7 +883,7 @@ public class OSCControl extends PApplet {
                         loopList = uiElements.getElementsByTagName("loop");
                         for (int j = 0; j < loopList.getLength(); j++) { //Loop through all <loop> XML elements.
                             /*
-                            Variables must be initialized to make the mute button - cannot be null. UIElement
+                            Variables must be initialized to make the UI element - cannot be null. UIElement
                             checks these values before adding the UIElement to the ArrayList of elements.
                             */
                             int x = -1000;
@@ -877,6 +911,7 @@ public class OSCControl extends PApplet {
                     }
                 }
 
+                //Catches any errors. If there are, print the stacktrace and warn the user.
             } catch (ParserConfigurationException e) {
                 e.printStackTrace();
                 alert("File loading failed!");
@@ -891,13 +926,13 @@ public class OSCControl extends PApplet {
                 alert("File loading failed!");
             }
         }
-        reloadData();
+        reloadData(); //Reload the OSC data for the new layout - max channels may have increased.
     }
+
     /*
     Saves X and Y data for an element into XML.
     Adapted from: https://stackoverflow.com/questions/7373567/how-to-read-and-write-xml-files
     */
-
     private Element createXYData(Element uiXmlElement, UIElement uiElement, Document doc) {
         Element e;
 
@@ -917,6 +952,8 @@ public class OSCControl extends PApplet {
         JOptionPane.showMessageDialog(null, message);
     }
 
+
+    //Getters and setters.
     public static OSCControl getApp() {
         return app;
     }
