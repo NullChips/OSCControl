@@ -37,19 +37,34 @@ public abstract class Button extends UIElement {
     }
 
     public void render() {
-        if(UIManager.getMgr().isEditMode()) {
-            if(UIManager.getMgr().getRecentElement() == this && app.frameCount / 20 % 2 == 0) {
+        if (UIManager.getMgr().isEditMode()) {
+            if (UIManager.getMgr().getRecentElement() == this && app.frameCount / 20 % 2 == 0 && UIManager.getMgr().isEditMode()) {
+                //If the app is in edit mode and this was the most recently selected element, flash to inform the user of this.
                 app.fill(colour.getRed() / 2, colour.getGreen() / 2, colour.getBlue() / 2);
-                if(mouseInElement()) {
+                if (mouseInElement()) {
+                    //If mouse is hovering over the button, draw a white border.
                     drawWhiteBorderRect();
                 } else {
+                    //If the mouse isn't, draw a normal border.
                     drawRect();
                 }
-            } else {
+            } else if (!(this instanceof ModeButton)) { //Mode button is always filled.
+                //Draw the rectangle with no fill.
                 app.noFill();
-                if(mouseInElement()) {
+                if (mouseInElement()) {
+                    //If mouse is hovering over the button, draw a white border.
                     drawWhiteBorderRect();
                 } else {
+                    //If the mouse isn't, draw a normal border.
+                    drawRect();
+                }
+            } else { //Mode button
+                app.fill(colour.getRed() / 2, colour.getGreen() / 2, colour.getBlue() / 2);
+                if (mouseInElement()) {
+                    //If mouse is hovering over the button, draw a white border.
+                    drawWhiteBorderRect();
+                } else {
+                    //If the mouse isn't, draw a normal border.
                     drawRect();
                 }
             }
@@ -97,6 +112,7 @@ public abstract class Button extends UIElement {
         app.text(label, x, y - 2);
     }
 
+    //Check the position of the mouse relative to the x and y values and return if the mouse is in the button.
     public boolean mouseInElement() {
         return app.mouseX - x + sizeX / 2 >= 0 && app.mouseX - x + sizeX / 2 <= sizeX &&
                 app.mouseY - y + sizeY / 2 >= 0 && app.mouseY - y + sizeY / 2 <= sizeY;

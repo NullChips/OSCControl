@@ -4,8 +4,9 @@ import java.awt.*;
 
 public class ChannelNumberButton extends Button {
 
-    private boolean isUp;
+    private boolean isUp; //This boolean defines if the button should be used to raise or lower the channel number.
 
+    //Constructor.
     public ChannelNumberButton(int x, int y, boolean isUp) {
         super(x, y, 50, 35, "", new Color(192, 192, 192));
         this.isUp = isUp;
@@ -16,33 +17,26 @@ public class ChannelNumberButton extends Button {
         }
     }
 
+    //When the mouse is pressed, check if the text in the textbox is a valid int. If so, adjust accordingly.
     public void mousePressed() {
         if (mouseInElement()) {
             int i;
-            if (isUp) {
-                try {
-                    i = Integer.parseInt(ModeButton.getCurrentChannelBox().getText());
-                } catch (NumberFormatException e) {
-                    ModeButton.displayChannelErrorMessage();
-                    System.out.println("Valid channel number not given!");
-                    return;
-                }
-                ModeButton.removeChannelErrorMessage();
-                ModeButton.setCurrentChannelNumber(i++);
-            } else {
-                try {
-                    i = Integer.parseInt(ModeButton.getCurrentChannelBox().getText());
-                } catch (NumberFormatException e) {
-                    ModeButton.displayChannelErrorMessage();
-                    System.out.println("Valid channel number not given!");
-                    return;
-                }
-                ModeButton.removeChannelErrorMessage();
-                if(i > 1) {
-                    ModeButton.setCurrentChannelNumber(i--); //Prevents the channel number from going below 1.
-                }
+            try {
+                i = Integer.parseInt(ModeButton.getCurrentChannelBox().getText());
+            } catch (NumberFormatException e) {
+                //Display a message to the user if the text box does not contain a valid number.
+                ModeButton.displayChannelErrorMessage();
+                return; //Exit, no further action can be taken.
             }
-            ModeButton.getCurrentChannelBox().setText(i + "");
+            ModeButton.removeChannelErrorMessage();
+
+            //Increase or decrease the number depending on the mode of the button.
+            if (isUp) {
+                ModeButton.setCurrentChannelNumber(i++);
+            } else if (i > 1) {
+                ModeButton.setCurrentChannelNumber(i--); //Prevents the channel number from going below 1.
+            }
+            ModeButton.getCurrentChannelBox().setText(i + ""); //Set the text box to contain the current number.
         }
     }
 }

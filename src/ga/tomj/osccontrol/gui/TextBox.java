@@ -7,9 +7,10 @@ import java.awt.*;
 
 public class TextBox extends UIElement {
 
+    //Global variables.
     protected int sizeX;
     private int sizeY;
-    protected int padding;
+    protected int padding; //Pixels from the left of the textbox to space.
     private int textSize;
     private Color boxColour;
     private Color textColour;
@@ -17,6 +18,7 @@ public class TextBox extends UIElement {
     protected String text;
 
 
+    //Constructor with a default AppMode set.
     public TextBox(int x, int y, int sizeX, int sizeY, int textSize, Color boxColour, Color textColour, String text) {
         super(x, y, AppMode.SETTINGS);
         this.sizeX = sizeX;
@@ -29,6 +31,7 @@ public class TextBox extends UIElement {
         this.padding = 4;
     }
 
+    //Constructor with a customisable AppMode.
     public TextBox(int x, int y, int sizeX, int sizeY, int textSize, Color boxColour, Color textColour, String text, AppMode mode) {
         super(x, y, mode);
         this.sizeX = sizeX;
@@ -54,9 +57,13 @@ public class TextBox extends UIElement {
         app.textAlign(app.LEFT, app.CENTER);
         app.textSize(textSize);
         if (isCurrentlyEditing) {
-            //If currently editing, enable flashing text cursor.
+            /*
+            If currently editing, enable flashing text cursor. When the framecount divided by 10 has modulo 2 equal to 0,
+            display the text cursor.
+            */
             app.text(text + (app.frameCount / 10 % 2 == 0 ? "|" : ""), (x - sizeX / 2) + padding, y - (textSize / 7));
         } else {
+            //If not currently editing, just render the text.
             app.text(text, (x - sizeX / 2) + padding, y - (textSize / 7));
         }
     }
@@ -71,6 +78,7 @@ public class TextBox extends UIElement {
                 case PConstants.ESC:
                 case PConstants.ENTER:
                 case PConstants.RETURN:
+                    //Exit the text box.
                     isCurrentlyEditing = false;
                     break;
                 case PConstants.BACKSPACE:

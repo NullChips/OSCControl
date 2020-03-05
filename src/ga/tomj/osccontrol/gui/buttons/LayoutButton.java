@@ -4,6 +4,7 @@ import ga.tomj.osccontrol.gui.UIManager;
 
 public class LayoutButton extends Button {
 
+    //LayoutButtonType defines how the button should be drawn and what should happen when
     private LayoutButtonType type;
 
     public LayoutButton(int x, int y, LayoutButtonType type) {
@@ -11,6 +12,7 @@ public class LayoutButton extends Button {
         this.type = type;
     }
 
+    //When the mouse is pressed, run the relevant mousePressed() method for the LayoutButtonType.
     public void mousePressed() {
         if (mouseInElement()) {
             type.mousePressed();
@@ -18,7 +20,7 @@ public class LayoutButton extends Button {
     }
 
 
-    //Overrides normal render method to allow the buton to flash.
+    //Overrides normal render method to allow the delete mode button to flash when active.
     public void render() {
         if (mouseInElement() && UIManager.getMgr().getElementDragged() == null) { //When the mouse is hovering over a button, a white stroke is drawn.
             if (isPressed()) { //If the button is pressed, render the button with a fill and a white stroke.
@@ -38,8 +40,10 @@ public class LayoutButton extends Button {
         }
         if (type == LayoutButtonType.DELETE_MODE) {
             if (UIManager.getMgr().isDeleteMode()) {
+                //Set the button to be pressed (filled with colour) if the modulo 2 of the frame count divided by ten is 0. (Flashes every 10 frames).
                 setPressed(app.frameCount / 10 % 2 == 0);
             } else {
+                //Delete mode isn't active, so don't fill the button.
                 setPressed(false);
 
             }
