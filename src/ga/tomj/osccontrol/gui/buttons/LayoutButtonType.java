@@ -10,6 +10,7 @@ public enum LayoutButtonType {
     DELETE_MODE("Delete Mode", new Color(255, 0, 0)) {
         public void mousePressed() {
             UIManager.getMgr().setDeleteMode(!UIManager.getMgr().isDeleteMode());
+            UIManager.getMgr().setRecentElement(null);
         }
     }, SAVE_LAYOUT("Save Layout", new Color(192, 192, 192)) {
         public void mousePressed() {

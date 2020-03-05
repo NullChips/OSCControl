@@ -1,5 +1,10 @@
 package ga.tomj.osccontrol.gui;
 
+import ga.tomj.osccontrol.gui.buttons.ModeButton;
+import ga.tomj.osccontrol.gui.buttons.MuteButton;
+import ga.tomj.osccontrol.gui.buttons.RecordArmButton;
+import ga.tomj.osccontrol.gui.buttons.SoloButton;
+
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class UIManager {
@@ -60,7 +65,38 @@ public class UIManager {
     }
 
     public void setRecentElement(UIElement recentElement) {
-        this.recentElement = recentElement;
+        if (!deleteMode && editMode) {
+            this.recentElement = recentElement;
+
+            if (recentElement == null) {
+                ModeButton.removeCurrentChannel();
+            }
+
+            if (recentElement instanceof MuteButton) {
+                MuteButton e = (MuteButton) recentElement;
+                ModeButton.setCurrentChannelNumber(e.getChannelNumber());
+            }
+
+            if (recentElement instanceof SoloButton) {
+                SoloButton e = (SoloButton) recentElement;
+                ModeButton.setCurrentChannelNumber(e.getChannelNumber());
+            }
+
+            if (recentElement instanceof RecordArmButton) {
+                RecordArmButton e = (RecordArmButton) recentElement;
+                ModeButton.setCurrentChannelNumber(e.getChannelNumber());
+            }
+
+            if (recentElement instanceof Fader) {
+                Fader e = (Fader) recentElement;
+                ModeButton.setCurrentChannelNumber(e.getChannelNumber());
+            }
+
+            if (recentElement instanceof Pan) {
+                Pan e = (Pan) recentElement;
+                ModeButton.setCurrentChannelNumber(e.getChannelNumber());
+            }
+        }
     }
 
     public boolean isDeleteMode() {

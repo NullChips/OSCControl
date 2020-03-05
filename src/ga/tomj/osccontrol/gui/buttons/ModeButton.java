@@ -28,7 +28,6 @@ public class ModeButton extends Button {
 
     public void mousePressed() {
         if (mouseInElement()) {
-            UIManager.getMgr().setRecentElement(this);
             UIManager.getMgr().setEditMode(!UIManager.getMgr().isEditMode());
             if (UIManager.getMgr().isEditMode()) {
                 setLabel("Change to Play Mode");
@@ -90,6 +89,11 @@ public class ModeButton extends Button {
         channelErrorMessage = null;
     }
 
+    public static void removeCurrentChannel() {
+        currentChannelNumber = -1;
+        currentChannelBox.setText("");
+    }
+
     public static ChannelNumberTextBox getCurrentChannelBox() {
         return currentChannelBox;
     }
@@ -100,7 +104,6 @@ public class ModeButton extends Button {
 
     public static void setCurrentChannelNumber(int newChannelNumber) {
         currentChannelNumber = newChannelNumber;
-
-        //TODO change number of recently selected object.
+        currentChannelBox.setText(currentChannelNumber + "");
     }
 }

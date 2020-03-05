@@ -13,7 +13,7 @@ public abstract class Button extends UIElement {
     private boolean pressed;
     protected boolean moving;
 
-    private Color colour;
+    protected Color colour;
 
     //Constructor, sets some default values including width and height.
     public Button(int x, int y, String label, Color colour) {
@@ -37,25 +37,43 @@ public abstract class Button extends UIElement {
     }
 
     public void render() {
-        if (mouseInElement() && UIManager.getMgr().getElementDragged() == null) { //When the mouse is hovering over a button, a white stroke is drawn.
-            if (pressed) { //If the button is pressed, render the button with a fill and a white stroke.
+        if(UIManager.getMgr().isEditMode()) {
+            if(UIManager.getMgr().getRecentElement() == this && app.frameCount / 20 % 2 == 0) {
                 app.fill(colour.getRed() / 2, colour.getGreen() / 2, colour.getBlue() / 2);
-                drawWhiteBorderRect();
-            } else { //If the button is not pressed, render the button without a fill and a white stroke.
+                if(mouseInElement()) {
+                    drawWhiteBorderRect();
+                } else {
+                    drawRect();
+                }
+            } else {
                 app.noFill();
-                drawWhiteBorderRect();
+                if(mouseInElement()) {
+                    drawWhiteBorderRect();
+                } else {
+                    drawRect();
+                }
             }
-            return; //Exit - the button has been rendered!
-        } else if (pressed) { //If the button has been pressed, render the button with a fill.
-            app.fill(colour.getRed() / 2, colour.getGreen() / 2, colour.getBlue() / 2);
-            drawRect();
-        } else { //If the button has not been pressed, render the button without a fill.
-            app.noFill();
-            drawRect();
+        } else {
+            if (mouseInElement() && UIManager.getMgr().getElementDragged() == null) { //When the mouse is hovering over a button, a white stroke is drawn.
+                if (pressed) { //If the button is pressed, render the button with a fill and a white stroke.
+                    app.fill(colour.getRed() / 2, colour.getGreen() / 2, colour.getBlue() / 2);
+                    drawWhiteBorderRect();
+                } else { //If the button is not pressed, render the button without a fill and a white stroke.
+                    app.noFill();
+                    drawWhiteBorderRect();
+                }
+                return; //Exit - the button has been rendered!
+            } else if (pressed) { //If the button has been pressed, render the button with a fill.
+                app.fill(colour.getRed() / 2, colour.getGreen() / 2, colour.getBlue() / 2);
+                drawRect();
+            } else { //If the button has not been pressed, render the button without a fill.
+                app.noFill();
+                drawRect();
+            }
         }
     }
 
-    private void drawRect() {
+    protected void drawRect() {
         app.stroke(colour.getRed(), colour.getGreen(), colour.getBlue());
         app.strokeCap(app.ROUND);
         app.strokeWeight(2);
@@ -67,7 +85,7 @@ public abstract class Button extends UIElement {
         app.text(label, x, y - 2);
     }
 
-    private void drawWhiteBorderRect() {
+    protected void drawWhiteBorderRect() {
         app.stroke(255);
         app.strokeCap(app.ROUND);
         app.strokeWeight(2);

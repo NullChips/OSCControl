@@ -63,6 +63,12 @@ public class Fader extends UIElement {
     }
 
     private void drawFader() {
+        if (UIManager.getMgr().getRecentElement() == this && app.frameCount / 20 % 2 == 0) {
+            app.noStroke();
+            app.shapeMode(app.CENTER);
+            app.fill(64, 192);
+            app.rect(x, y, faderWidth + 2, faderHeight + 4);
+        }
         app.strokeWeight(6);
         app.stroke(64);
         app.line(x, y - faderHeight / 2, x, y + faderHeight / 2);

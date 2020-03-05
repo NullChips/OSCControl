@@ -59,6 +59,12 @@ public abstract class UIElement {
         }
     }
 
+    public void checkAndDelete() {
+        if(UIManager.getMgr().isDeleteMode() && UIManager.getMgr().isEditMode() && editable && mouseInElement()) {
+            UIManager.getMgr().getElements().remove(this);
+        }
+    }
+
     public void doubleClick() {
         mousePressed();
     }

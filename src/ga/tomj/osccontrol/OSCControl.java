@@ -126,6 +126,7 @@ public class OSCControl extends PApplet {
             for (UIElement e : UIManager.getMgr().getElements()) {
                 if (mode == e.getMode()) {
                     e.mousePressed();
+                    e.checkAndDelete();
                 }
             }
             isDoubleClick = true;
@@ -228,7 +229,7 @@ public class OSCControl extends PApplet {
     public void oscEvent(OscMessage message) {
         if (mode == AppMode.RUN) {
             String messageString = message.addrPattern();
-            String[] splitMessage = split(messageString, "/"); //Split the message into its seperate parts.
+            String[] splitMessage = split(messageString, "/"); //Split the message into its separate parts.
 
             print("### Received an osc message.");
             println(" addrpattern: " + messageString + "   Typetag: " + message.typetag() + "   Length: " + splitMessage.length);
@@ -394,7 +395,6 @@ public class OSCControl extends PApplet {
     }
 
     public void loadLayout() {
-        System.out.println("got here");
         selectInput("Open Layout:", "openFileSelected");
     }
     /*XML saving method. Adapted from: https://stackoverflow.com/questions/7373567/how-to-read-and-write-xml-files*/
@@ -561,11 +561,6 @@ public class OSCControl extends PApplet {
 
                 Element root = doc.getDocumentElement();
                 NodeList settings = doc.getElementsByTagName("settings");
-
-                if (settings == null) {
-                    System.out.println("settings is null wtf");
-                    return;
-                }
 
                 int sizeX = 200;
                 int sizeY = 200;
@@ -881,7 +876,6 @@ public class OSCControl extends PApplet {
                         }
                     }
                 }
-                System.out.println("There are " + elementList.getLength() + " elements saved in this layout.");
 
             } catch (ParserConfigurationException e) {
                 e.printStackTrace();

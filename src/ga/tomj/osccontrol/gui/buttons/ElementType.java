@@ -21,6 +21,7 @@ public enum ElementType {
     }, RECORD_BUTTON("Rec. Arm Button", RecordArmButton.COLOUR) {
         public void mouseClicked() {
             RecordArmButton r = new RecordArmButton(x, y, 1);
+            UIManager.getMgr().setRecentElement(r);
         }
     }, PAN("Pan", new Color(185, 185, 185)) {
         public void mouseClicked() {
@@ -35,21 +36,22 @@ public enum ElementType {
     }, TIMECODE("Time", Timecode.COLOUR) {
         public void mouseClicked() {
             Timecode tc = new Timecode(x, y);
+            UIManager.getMgr().setRecentElement(null);
         }
     },PLAY_BUTTON("Play Button", TransportButtonType.PLAY.getColour()) {
         public void mouseClicked() {
             TransportButton t = new TransportButton(x, y, TransportButtonType.PLAY);
-            UIManager.getMgr().setRecentElement(t);
+            UIManager.getMgr().setRecentElement(null);
         }
     }, CLICK_BUTTON("Click Button", TransportButtonType.CLICK.getColour()) {
         public void mouseClicked() {
             TransportButton t = new TransportButton(x, y, TransportButtonType.CLICK);
-            UIManager.getMgr().setRecentElement(t);
+            UIManager.getMgr().setRecentElement(null);
         }
     }, LOOP_BUTTON("Loop Button", TransportButtonType.LOOP.getColour()) {
         public void mouseClicked() {
             TransportButton t = new TransportButton(x, y, TransportButtonType.LOOP);
-            UIManager.getMgr().setRecentElement(t);
+            UIManager.getMgr().setRecentElement(null);
         }
     };
 

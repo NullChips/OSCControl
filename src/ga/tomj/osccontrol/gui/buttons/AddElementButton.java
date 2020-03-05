@@ -20,7 +20,6 @@ public class AddElementButton extends Button {
 
     public void mousePressed() {
         if (mouseInElement()) {
-            UIManager.getMgr().setRecentElement(this);
             element.mouseClicked();
         }
     }

@@ -20,6 +20,12 @@ public class Pan extends UIElement {
     }
 
     public void render() {
+        if (UIManager.getMgr().getRecentElement() == this && app.frameCount / 20 % 2 == 0) {
+            app.noStroke();
+            app.shapeMode(app.CENTER);
+            app.fill(64, 192);
+            app.rect(x, y, diameter + 3, diameter + 3);
+        }
         app.stroke(80);
         if (UIManager.getMgr().getElementDragged() == this) {
             app.fill(128);
@@ -44,7 +50,7 @@ public class Pan extends UIElement {
 
     public void mousePressed() {
         setOffsets();
-        if(mouseInElement()) {
+        if (mouseInElement()) {
             UIManager.getMgr().setRecentElement(this);
             i = 0;
             mouseY = app.mouseY;
@@ -91,7 +97,6 @@ public class Pan extends UIElement {
         OscMessage message = new OscMessage("/track/" + channelNumber + "/pan");
         float f = percent;
         f = f / 100;
-        System.out.println(f);
         message.add(f);
         app.getOscp5().send(message, app.getReaperAddr());
     }
@@ -102,5 +107,9 @@ public class Pan extends UIElement {
 
     public int getChannelNumber() {
         return channelNumber;
+    }
+
+    public void setChannelNumber(int channelNumber) {
+        this.channelNumber = channelNumber;
     }
 }

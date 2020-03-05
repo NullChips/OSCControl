@@ -20,7 +20,6 @@ public class ChannelNumberButton extends Button {
         if (mouseInElement()) {
             int i;
             if (isUp) {
-                System.out.println("Got here");
                 try {
                     i = Integer.parseInt(ModeButton.getCurrentChannelBox().getText());
                 } catch (NumberFormatException e) {
@@ -30,9 +29,7 @@ public class ChannelNumberButton extends Button {
                 }
                 ModeButton.removeChannelErrorMessage();
                 ModeButton.setCurrentChannelNumber(i++);
-                System.out.println("Up Pressed " + i);
             } else {
-                System.out.println("Got here 2");
                 try {
                     i = Integer.parseInt(ModeButton.getCurrentChannelBox().getText());
                 } catch (NumberFormatException e) {
@@ -41,8 +38,9 @@ public class ChannelNumberButton extends Button {
                     return;
                 }
                 ModeButton.removeChannelErrorMessage();
-                ModeButton.setCurrentChannelNumber(i--);
-                System.out.println("Down Pressed " + i);
+                if(i > 1) {
+                    ModeButton.setCurrentChannelNumber(i--); //Prevents the channel number from going below 1.
+                }
             }
             ModeButton.getCurrentChannelBox().setText(i + "");
         }
